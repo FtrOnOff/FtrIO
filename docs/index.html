@@ -1066,10 +1066,24 @@ FTRIO__Toggles__NewCheckout=50%</code></pre>
     </ul>
 
     <h3>Quick start</h3>
-    <pre><code>git clone https://github.com/FtrOnOff/FtrIO.Toaster
-cd FtrIO.Toaster
-docker compose up -d</code></pre>
-    <p>Then open <code>http://localhost:8000</code>.</p>
+    <p>The image is published to <a href="https://hub.docker.com/repository/docker/thescottbot/ftrio/general">Docker Hub</a>. Create a <code>compose.yml</code> and run <code>docker compose up -d</code>:</p>
+    <pre><code>services:
+  toaster:
+    image: thescottbot/ftrio:latest
+    ports:
+      - "8000:8000"
+    environment:
+      APPSETTINGS_PATH: /data/appsettings.json
+      APP_NAME: MyApp
+      # AUTH_USERNAME: admin
+      # AUTH_PASSWORD: secret
+    volumes:
+      - /path/to/your/appsettings.json:/data/appsettings.json
+      - toaster-logs:/log
+volumes:
+  toaster-logs:</code></pre>
+    <p>Then open <code>http://localhost:8000</code>. Point the volume mount at the same <code>appsettings.json</code> your app reads — Toaster and your app will stay in sync automatically.</p>
+    <p>To clone the repo instead (for contributors or self-building the image): <code>git clone https://github.com/FtrOnOff/FtrIO.Toaster &amp;&amp; cd FtrIO.Toaster &amp;&amp; docker compose up -d</code>.</p>
 
     <h3>Configuration</h3>
     <p>Toaster is configured entirely via environment variables:</p>

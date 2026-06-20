@@ -19,7 +19,7 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 ## The FtrIO ecosystem
 
 - **[FtrIO](https://github.com/FtrOnOff/FtrIO)** — the core library. Weaves `[Toggle]` into your IL at compile time, reads state from `appsettings.json` at runtime, and optionally syncs from remote sources via the provider pipeline.
-- **[FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster)** — a lightweight web UI for managing toggles live. Writes values through `ToggleProviderBuffer` so changes flush to `appsettings.json` and are picked up instantly via `ReloadOnChange` — no file editing, no restart.
+- **[FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster)** — a lightweight web UI for managing toggles live. Writes values through `ToggleProviderBuffer` so changes flush to `appsettings.json` and are picked up instantly via `ReloadOnChange` — no file editing, no restart. Available on [Docker Hub](https://hub.docker.com/repository/docker/thescottbot/ftrio/general) — deploy with a single `compose.yml`, no clone required.
 - **[FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo)** — a .NET CLI audit tool. Scans your source tree for every toggle reference, cross-references against `appsettings.json`, and reports each toggle's state (ON / OFF / 20% / BLUE / MISSING) with file and line number.
 
 ```
