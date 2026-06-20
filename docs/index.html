@@ -1130,8 +1130,8 @@ volumes:
     <p><a href="https://github.com/FtrOnOff/FtrIO.onetwo">FtrIO.onetwo</a> is a .NET CLI audit tool. It walks your project's source tree, finds every FtrIO toggle reference, cross-references each against <code>appsettings.json</code>, and outputs a table showing the current state — file and line number included. Because FtrIO always resolves toggle state from <code>appsettings.json</code> at runtime, the tool gives you an instant at-a-glance view of exactly what is enabled or disabled right now without opening a single source file manually.</p>
 
     <h3>Installation</h3>
-    <pre><code>dotnet pack ./FtrIO.OneTwo
-dotnet tool install -g FtrIO.OneTwo --add-source ./FtrIO.OneTwo/nupkg</code></pre>
+    <pre><code>dotnet tool install -g FtrIO.onetwo</code></pre>
+    <p>Available on <a href="https://www.nuget.org/packages/FtrIO.onetwo">NuGet</a>.</p>
 
     <h3>Usage</h3>
     <pre><code>FtrIO.onetwo [--source &lt;path&gt;] [--config &lt;path&gt;] [--env &lt;name&gt;] [--markdown &lt;output.md&gt;]</code></pre>
