@@ -40,7 +40,7 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 └──────────┬──────────────────────────┬───────────────┘
            │ writes live              │ reads & audits
            ▼                          ▼
-  FtrIO.Toaster                 ftrio-onetwo
+  FtrIO.Toaster                 FtrIO.onetwo
   (web UI — manage toggles)     (CLI — audit state)
 ```
 
@@ -51,7 +51,7 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 | **Call-site syntax** | `[Toggle]` attribute, zero noise | SDK call at every site | `if (await _fm.IsEnabledAsync(...))` | SDK call at every site |
 | **Works offline** | ✅ always (file-backed) | ❌ needs SDK fallback config | ✅ | ❌ needs SDK fallback config |
 | **Compile-time validation** | ✅ Roslyn analyzer | ❌ | ❌ | ❌ |
-| **Codebase audit / drift detection** | ✅ [ftrio-onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) CLI | ❌ | ❌ | ❌ |
+| **Codebase audit / drift detection** | ✅ [FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) CLI | ❌ | ❌ | ❌ |
 | **Management UI** | ✅ [Toaster](https://github.com/FtrOnOff/FtrIO.Toaster), self-hosted | ✅ SaaS dashboard | ❌ | ✅ SaaS dashboard |
 | **Percentage rollout** | ✅ | ✅ | ✅ | ✅ |
 | **Self-hosted / no vendor** | ✅ | ❌ paid SaaS | ✅ | ✅ (or SaaS) |
@@ -171,5 +171,5 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 | Exceptions — `ToggleDoesNotExistException` etc. | [docs/#exceptions](https://ftronoff.github.io/FtrIO/#exceptions) |
 | Custom parser / Dependency Injection | [docs/#di](https://ftronoff.github.io/FtrIO/#di) |
 | Manual control — `ExecuteMethodIfToggleOn` | [docs](https://ftronoff.github.io/FtrIO/) |
-| Companion tooling — ftrio-onetwo | [github.com/FtrOnOff/FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) |
+| Companion tooling — FtrIO.onetwo | [github.com/FtrOnOff/FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) |
 | Companion UI — FtrIO.Toaster | [github.com/FtrOnOff/FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster) |
