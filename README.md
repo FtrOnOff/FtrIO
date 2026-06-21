@@ -146,12 +146,15 @@ Providers push updates into `ToggleProviderBuffer`; the buffer flushes to `appse
 ```csharp
 ToggleParserProvider.Configure(new StrategyToggleParser(
     new PercentageRolloutStrategy(),
-    new BlueGreenStrategy("blue", "blue", "green")
+    new BlueGreenStrategy()  // reads slot from FtrIO:BlueGreen in appsettings.json
 ));
 ```
 
 ```json
-{ "Toggles": { "NewCheckout": "20%", "PaymentV2": "blue" } }
+{
+  "FtrIO": { "BlueGreen": { "CurrentSlot": "blue", "KnownSlots": "blue,green" } },
+  "Toggles": { "NewCheckout": "20%", "PaymentV2": "blue" }
+}
 ```
 
 > **[Full strategy docs →](https://ftronoff.github.io/FtrIO/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, custom `IToggleDecisionStrategy`
