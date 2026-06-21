@@ -16,7 +16,7 @@ var parser = new StrategyToggleParser(
     new AttributeRuleStrategy(accessor),
     new ABTestStrategy(accessor),
     new PercentageRolloutStrategy(),
-    new BlueGreenStrategy("blue", "blue", "green")
+    new BlueGreenStrategy()  // slot read from FtrIO:BlueGreen:CurrentSlot in appsettings.json
 );
 ToggleParserProvider.Configure(parser);
 

@@ -154,5 +154,47 @@ namespace FtrIOTests.Unit
             var strategy = new BlueGreenStrategy("blue", "blue", "green");
             Assert.IsTrue(strategy.CanHandle("  blue  "));
         }
+
+        // ── BlueGreenStrategy — config-driven (hot-reload) ────────────────────
+
+        [Test]
+        public void BlueGreenStrategy_ConfigDriven_CanHandle_RecognisesKnownSlotsFromConfig()
+        {
+            var strategy = new BlueGreenStrategy(TestAppsettingsDir);
+            Assert.IsTrue(strategy.CanHandle("blue"));
+            Assert.IsTrue(strategy.CanHandle("green"));
+        }
+
+        [Test]
+        public void BlueGreenStrategy_ConfigDriven_CanHandle_ReturnsFalseForUnknownSlot()
+        {
+            var strategy = new BlueGreenStrategy(TestAppsettingsDir);
+            Assert.IsFalse(strategy.CanHandle("canary"));
+        }
+
+        [Test]
+        public void BlueGreenStrategy_ConfigDriven_ShouldExecute_ReturnsTrueForCurrentSlot()
+        {
+            // Test appsettings has CurrentSlot = "blue"
+            var strategy = new BlueGreenStrategy(TestAppsettingsDir);
+            Assert.IsTrue(strategy.ShouldExecute("key", "blue"));
+        }
+
+        [Test]
+        public void BlueGreenStrategy_ConfigDriven_ShouldExecute_ReturnsFalseForInactiveSlot()
+        {
+            var strategy = new BlueGreenStrategy(TestAppsettingsDir);
+            Assert.IsFalse(strategy.ShouldExecute("key", "green"));
+        }
+
+        [Test]
+        public void BlueGreenStrategy_ConfigDriven_MissingConfig_CanHandleReturnsFalse()
+        {
+            var strategy = new BlueGreenStrategy(Path.GetTempPath());
+            Assert.IsFalse(strategy.CanHandle("blue"));
+        }
+
+        private static string TestAppsettingsDir =>
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
     }
 }
