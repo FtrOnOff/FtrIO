@@ -1244,6 +1244,18 @@ ftrio.onetwo --source C:\Projects\MyApp --config C:\Server\configs --env Product
     <h3>Generating a markdown report</h3>
     <pre><code>ftrio.onetwo --source C:\Projects\MyApp --config C:\Server\configs --env Production --markdown toggles.md</code></pre>
     <p>Writes the same table output to a <code>.md</code> file — useful for including toggle state snapshots in PRs or release notes.</p>
+
+    <h3>🔬 Experimental: Migration tooling</h3>
+    <div class="note">
+      These commands are available in the experimental release of FtrIO.onetwo. Install with:
+      <pre style="margin-top:0.6rem;margin-bottom:0;"><code>dotnet tool install --global FtrIO.onetwo --version 1.1.1-experimental</code></pre>
+    </div>
+
+    <h4><code>ftrio.onetwo import</code></h4>
+    <p>Pull flag state from LaunchDarkly, Flagsmith, flagd, env vars, or an HTTP endpoint directly into <code>appsettings.json</code>. Run once to snapshot your current flag state, then migrate call sites at your own pace.</p>
+
+    <h4><code>ftrio.onetwo migrate</code></h4>
+    <p>Scan your <code>.cs</code> files for LaunchDarkly or Flagsmith SDK call patterns, cross-reference against live flag state, and generate a migration report with suggested actions. Does not modify any code.</p>
   </section>
 
   <!-- CI/CD ACTIONS -->
