@@ -238,6 +238,6 @@ namespace FtrIOTests.Unit
     {
         // Path to the FtrIOTests project directory where appsettings.json lives.
         public static string TestAppsettingsDir =>
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..\\..\\.."));
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
     }
 }
