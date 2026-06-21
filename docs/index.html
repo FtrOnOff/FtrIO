@@ -1247,15 +1247,55 @@ ftrio.onetwo --source C:\Projects\MyApp --config C:\Server\configs --env Product
 
     <h3>🔬 Experimental: Migration tooling</h3>
     <div class="note">
-      These commands are available in the experimental release of FtrIO.onetwo. Install with:
-      <pre style="margin-top:0.6rem;margin-bottom:0;"><code>dotnet tool install --global FtrIO.onetwo --version 1.1.1-experimental</code></pre>
+      <strong>v1.1.2-experimental</strong> — extends the migration commands from v1.1.1 with Microsoft.FeatureManagement support and a new <code>eject</code> command. Install with:
+      <pre style="margin-top:0.6rem;margin-bottom:0;"><code>dotnet tool install --global FtrIO.onetwo --version 1.1.2-experimental</code></pre>
+      <p style="margin-top:0.75rem;margin-bottom:0;">These commands have not been tested against all configurations. If you try them please <a href="https://github.com/FtrOnOff/FtrIO.onetwo/issues">open an issue</a> with what worked, what didn't, and what your setup looks like — see <a href="#onetwo-testers">areas of interest</a> below.</p>
     </div>
 
     <h4><code>ftrio.onetwo import</code></h4>
-    <p>Pull flag state from LaunchDarkly, Flagsmith, flagd, env vars, or an HTTP endpoint directly into <code>appsettings.json</code>. Run once to snapshot your current flag state, then migrate call sites at your own pace.</p>
+    <p>Pull flag state from LaunchDarkly, Flagsmith, flagd, Microsoft.FeatureManagement, env vars, or an HTTP endpoint directly into <code>appsettings.json</code>. Run once to snapshot your current flag state, then migrate call sites at your own pace.</p>
+    <p>For Microsoft.FeatureManagement, reads the <code>FeatureManagement</code> section from a local <code>appsettings.json</code> and writes values into <code>Toggles</code>. Simple booleans are mapped directly; <code>EnabledFor: Percentage</code> is mapped to FtrIO's <code>"20%"</code> format; complex feature filters produce a warning. No API key or network access required.</p>
+    <pre><code>ftrio.onetwo import --source microsoft.featuremanagement --file appsettings.json --config appsettings.json</code></pre>
 
     <h4><code>ftrio.onetwo migrate</code></h4>
-    <p>Scan your <code>.cs</code> files for LaunchDarkly or Flagsmith SDK call patterns, cross-reference against live flag state, and generate a migration report with suggested actions. Does not modify any code.</p>
+    <p>Scan your <code>.cs</code> files for LaunchDarkly, Flagsmith, or Microsoft.FeatureManagement SDK call patterns, cross-reference against live flag state, and generate a migration report with suggested actions. Does not modify any code.</p>
+    <p>For Microsoft.FeatureManagement, detects <code>[FeatureGate("key")]</code> attributes, <code>IsEnabled("key")</code>, and <code>IsEnabledAsync("key")</code> via Roslyn. <code>[FeatureGate]</code> → <code>[Toggle]</code> is surfaced as a direct 1:1 replacement in the report. No API key required — flag values are read from local config.</p>
+    <pre><code>ftrio.onetwo migrate --from microsoft.featuremanagement --source ./src --markdown plan.md</code></pre>
+
+    <h4><code>ftrio.onetwo eject</code></h4>
+    <p>Generates a complete exit report from FtrIO back to another feature flag system. Scans source for toggle references, reads current values from <code>appsettings.json</code>, optionally creates flags in the target system via its API, and produces a per-flag report of the code changes required — including key normalisation, suggested call site replacements, and a ready-to-paste config block.</p>
+    <p><strong>Supported targets:</strong> LaunchDarkly, Flagsmith, Microsoft.FeatureManagement, Unleash</p>
+    <pre><code><span class="cm"># Report only — no API calls</span>
+ftrio.onetwo eject --to launchdarkly --source ./src
+
+<span class="cm"># Create flags and write a report</span>
+ftrio.onetwo eject --to launchdarkly --api-key sdk-xxx --project my-project --env production --source ./src --markdown eject-report.md
+
+<span class="cm"># Microsoft.FeatureManagement — no API needed, lowest-friction exit</span>
+ftrio.onetwo eject --to microsoft.featuremanagement --source ./src --markdown eject-report.md</code></pre>
+
+    <h5>Key normalisation</h5>
+    <table>
+      <thead><tr><th>Target</th><th>Convention</th></tr></thead>
+      <tbody>
+        <tr><td>LaunchDarkly</td><td><code>SendWelcomeEmail</code> → <code>send-welcome-email</code></td></tr>
+        <tr><td>Flagsmith</td><td><code>SendWelcomeEmail</code> → <code>send_welcome_email</code></td></tr>
+        <tr><td>Microsoft.FeatureManagement</td><td><code>SendWelcomeEmail</code> → <code>SendWelcomeEmail</code> (unchanged)</td></tr>
+        <tr><td>Unleash</td><td><code>SendWelcomeEmail</code> → <code>send-welcome-email</code></td></tr>
+      </tbody>
+    </table>
+    <p>Supports <code>--dry-run</code>, <code>--exclude</code>, and <code>--markdown</code>. Exit codes: <code>0</code> all clean, <code>1</code> flags missing or failed, <code>2</code> source/config not found, <code>3</code> API unreachable.</p>
+
+    <h4 id="onetwo-testers">Help wanted — call for testers</h4>
+    <p>The <code>migrate</code>, <code>import</code>, and <code>eject</code> commands are experimental. The Microsoft.FeatureManagement path in particular has not been tested against a live account. If you try any of these commands please <a href="https://github.com/FtrOnOff/FtrIO.onetwo/issues">open an issue</a> with what worked, what didn't, and what your setup looks like.</p>
+    <p>Areas of particular interest:</p>
+    <ul style="color:var(--muted); padding-left:1.4rem; line-height:2.2; margin-bottom:1rem;">
+      <li>Flag value edge cases — targeting rules, multi-variate flags, percentage rollouts</li>
+      <li>Microsoft.FeatureManagement custom feature filters beyond <code>Percentage</code></li>
+      <li>API auth flows for LaunchDarkly, Flagsmith, and Unleash eject targets</li>
+      <li>Eject round-trip accuracy against a real project</li>
+    </ul>
+    <p>The core <code>ftrio.onetwo</code> scan command and the <code>export-manifest</code> / <code>release-check</code> actions are unchanged and stable.</p>
   </section>
 
   <!-- CI/CD ACTIONS -->
