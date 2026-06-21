@@ -21,6 +21,8 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 - **[FtrIO](https://github.com/FtrOnOff/FtrIO)** — the core library. Weaves `[Toggle]` into your IL at compile time, reads state from `appsettings.json` at runtime, and optionally syncs from remote sources via the provider pipeline.
 - **[FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster)** — a lightweight web UI for managing toggles live. Writes values through `ToggleProviderBuffer` so changes flush to `appsettings.json` and are picked up instantly via `ReloadOnChange` — no file editing, no restart. Available on [Docker Hub](https://hub.docker.com/repository/docker/thescottbot/ftrio/general) — deploy with a single `compose.yml`, no clone required.
 - **[FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo)** — a .NET CLI audit tool. Scans your source tree for every toggle reference, cross-references against `appsettings.json`, and reports each toggle's state (ON / OFF / 20% / BLUE / MISSING) with file and line number.
+- **[export-manifest-action](https://github.com/FtrOnOff/export-manifest-action)** — GitHub Action that scans source for `[Toggle]` usage and uploads a manifest of required toggle keys as a build artifact.
+- **[release-check-action](https://github.com/FtrOnOff/release-check-action)** — GitHub Action that downloads the manifest and validates it against a target `appsettings.json` before deploying. Blocks the deploy if any keys are missing.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -52,6 +54,7 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 | **Works offline** | ✅ always (file-backed) | ❌ needs SDK fallback config | ✅ | ❌ needs SDK fallback config |
 | **Compile-time validation** | ✅ Roslyn analyzer | ❌ | ❌ | ❌ |
 | **Codebase audit / drift detection** | ✅ [FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) CLI | ❌ | ❌ | ❌ |
+| **CI/CD deploy gate** | ✅ blocks deploy if toggle keys missing from target config | ❌ | ❌ | ❌ |
 | **Management UI** | ✅ [Toaster](https://github.com/FtrOnOff/FtrIO.Toaster), self-hosted | ✅ SaaS dashboard | ❌ | ✅ SaaS dashboard |
 | **Percentage rollout** | ✅ | ✅ | ✅ | ✅ |
 | **Self-hosted / no vendor** | ✅ | ❌ paid SaaS | ✅ | ✅ (or SaaS) |
@@ -127,6 +130,8 @@ Providers push updates into `ToggleProviderBuffer`; the buffer flushes to `appse
 
 > **`ReloadOnChange: true` is mandatory when using providers** — without it `ToggleParser` reads the file once at startup and never sees buffer flushes.
 
+> **Don't need automated sync?** [FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster) lets you change toggle values on demand via a UI — no provider pipeline required. It writes directly through `ToggleProviderBuffer` and your app picks up the change live.
+
 > **[Full provider docs →](https://ftronoff.github.io/FtrIO/#providers)** — HTTP, Azure App Config, env vars, buffer config, CompositeToggleParser
 
 ---
@@ -173,3 +178,6 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 | Manual control — `ExecuteMethodIfToggleOn` | [docs](https://ftronoff.github.io/FtrIO/) |
 | Companion tooling — FtrIO.onetwo | [github.com/FtrOnOff/FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) |
 | Companion UI — FtrIO.Toaster | [github.com/FtrOnOff/FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster) |
+| CI/CD — export-manifest-action | [github.com/FtrOnOff/export-manifest-action](https://github.com/FtrOnOff/export-manifest-action) |
+| CI/CD — release-check-action | [github.com/FtrOnOff/release-check-action](https://github.com/FtrOnOff/release-check-action) |
+| CI/CD — full pipeline docs | [docs/#cicd](https://ftronoff.github.io/FtrIO/#cicd) |
