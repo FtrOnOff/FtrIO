@@ -8,6 +8,7 @@
     {
         private readonly bool _configFileExists;
         private readonly IConfigurationSection _toggles;
+        private readonly IConfigurationSection? _overridesSection;
 
         public ToggleParser(string? basePath = null)
         {
@@ -38,7 +39,9 @@
                     builder.AddJsonFile(
                         $"appsettings.{environment}.json", optional: true, reloadOnChange: reloadOnChange);
 
-                _toggles = builder.Build().GetSection("Toggles");
+                var config = builder.Build();
+                _toggles = config.GetSection("Toggles");
+                _overridesSection = config.GetSection("TogglesOverrides");
             }
         }
 
@@ -78,6 +81,15 @@
             {
                 throw new ToggleParsedOutOfRangeException();
             }
+        }
+
+        public bool? GetOverride(string toggleKey, string userId)
+        {
+            var raw = _overridesSection?[$"{toggleKey}:{userId}"];
+            if (raw is null) return null;
+            if (raw.Equals("true", StringComparison.OrdinalIgnoreCase) || raw == "1") return true;
+            if (raw.Equals("false", StringComparison.OrdinalIgnoreCase) || raw == "0") return false;
+            return null;
         }
     }
 }

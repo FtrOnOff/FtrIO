@@ -26,16 +26,25 @@ namespace FtrIO.Classes
     {
         private readonly IToggleValueProvider? _provider;
         private readonly IToggleDecisionStrategy[] _strategies;
+        private readonly OverrideResolver? _overrides;
 
         // appsettings.json path (used when no IToggleValueProvider)
         private readonly bool _configFileExists;
         private readonly IConfigurationSection? _toggles;
+        private readonly IConfigurationSection? _overridesSection;
 
         public StrategyToggleParser(params IToggleDecisionStrategy[] strategies)
-            : this((string?)null, strategies) { }
+            : this(overrides: null, basePath: null, strategies) { }
+
+        public StrategyToggleParser(OverrideResolver? overrides, params IToggleDecisionStrategy[] strategies)
+            : this(overrides, basePath: null, strategies) { }
 
         public StrategyToggleParser(string? basePath, params IToggleDecisionStrategy[] strategies)
+            : this(overrides: null, basePath, strategies) { }
+
+        public StrategyToggleParser(OverrideResolver? overrides, string? basePath, params IToggleDecisionStrategy[] strategies)
         {
+            _overrides = overrides;
             _strategies = BuildStrategyChain(strategies);
             basePath ??= AppContext.BaseDirectory;
             _configFileExists = File.Exists(Path.Combine(basePath, "appsettings.json"));
@@ -64,12 +73,18 @@ namespace FtrIO.Classes
                     builder.AddJsonFile(
                         $"appsettings.{environment}.json", optional: true, reloadOnChange: reloadOnChange);
 
-                _toggles = builder.Build().GetSection("Toggles");
+                var config = builder.Build();
+                _toggles = config.GetSection("Toggles");
+                _overridesSection = config.GetSection("TogglesOverrides");
             }
         }
 
         public StrategyToggleParser(IToggleValueProvider provider, params IToggleDecisionStrategy[] strategies)
+            : this(overrides: null, provider, strategies) { }
+
+        public StrategyToggleParser(OverrideResolver? overrides, IToggleValueProvider provider, params IToggleDecisionStrategy[] strategies)
         {
+            _overrides = overrides;
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _strategies = BuildStrategyChain(strategies);
             _configFileExists = true;
@@ -77,6 +92,13 @@ namespace FtrIO.Classes
 
         public bool GetToggleStatus(string toggle)
         {
+            // Overrides win unconditionally before any strategy is consulted.
+            if (_overrides is not null)
+            {
+                var overrideValue = _overrides.GetOverride(toggle);
+                if (overrideValue.HasValue) return overrideValue.Value;
+            }
+
             string? rawValue;
 
             if (_provider != null)
@@ -101,6 +123,15 @@ namespace FtrIO.Classes
             var strategy = _strategies.FirstOrDefault(s => s.CanHandle(status));
             if (strategy == null) throw new ToggleParsedOutOfRangeException();
             return strategy.ShouldExecute(string.Empty, status);
+        }
+
+        public bool? GetOverride(string toggleKey, string userId)
+        {
+            var raw = _overridesSection?[$"{toggleKey}:{userId}"];
+            if (raw is null) return null;
+            if (raw.Equals("true", StringComparison.OrdinalIgnoreCase) || raw == "1") return true;
+            if (raw.Equals("false", StringComparison.OrdinalIgnoreCase) || raw == "0") return false;
+            return null;
         }
 
         private static IToggleDecisionStrategy[] BuildStrategyChain(IToggleDecisionStrategy[] strategies)

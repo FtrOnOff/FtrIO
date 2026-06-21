@@ -12,7 +12,7 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 
 ## Why FtrIO?
 
-- **Zero call-site noise.** `[Toggle]` is woven directly into the method's IL by AspectInjector at compile time. A toggled method looks and calls exactly like a normal method — no `if (featureFlags.IsEnabled(...))`, no injected service, no wrapper at every call site. Remove the attribute and the method is back to normal.
+- **Zero call-site noise.** `[Toggle]` is the only thing at every call site — all strategy wiring lives in one startup block, not spread across your codebase. A toggled method looks and calls exactly like a normal method — no `if (featureFlags.IsEnabled(...))`, no injected service, no wrapper at every call site. Remove the attribute and the method is back to normal.
 - **appsettings.json as a read-through cache.** Other libraries make your app depend on an external flag service being online. FtrIO flips this: providers run in the background and write their state into `appsettings.json`; `ToggleParser` always reads from the file. If the remote source goes offline, the last known state is served automatically from disk — no fallback code, no circuit breaker, no stale-cache TTL to configure.
 - **Escape hatch built in.** The same `appsettings.json` you already deploy works as a fully functional toggle store without any provider. Swap from a static file to Azure App Config (or back) without touching a single call site.
 
@@ -55,6 +55,9 @@ Gate method execution from config — no `if` statements, no wrapper classes. De
 | **Compile-time validation** | ✅ Roslyn analyzer | ❌ | ❌ | ❌ |
 | **Codebase audit / drift detection** | ✅ [FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) CLI | ❌ | ❌ | ❌ |
 | **CI/CD deploy gate** | ✅ blocks deploy if toggle keys missing from target config | ❌ | ❌ | ❌ |
+| **Per-user targeting** | ✅ `UserTargetingStrategy` | ✅ | ✅ | ✅ |
+| **Attribute-based rules** | ✅ `AttributeRuleStrategy` | ✅ | ✅ | ✅ |
+| **A/B test assignment** | ✅ `ABTestStrategy` (deterministic) | ✅ | ⚠️ via Percentage filter | ✅ |
 | **Management UI** | ✅ [Toaster](https://github.com/FtrOnOff/FtrIO.Toaster), self-hosted | ✅ SaaS dashboard | ❌ | ✅ SaaS dashboard |
 | **Percentage rollout** | ✅ | ✅ | ✅ | ✅ |
 | **Self-hosted / no vendor** | ✅ | ❌ paid SaaS | ✅ | ✅ (or SaaS) |
@@ -151,7 +154,7 @@ ToggleParserProvider.Configure(new StrategyToggleParser(
 { "Toggles": { "NewCheckout": "20%", "PaymentV2": "blue" } }
 ```
 
-> **[Full strategy docs →](https://ftronoff.github.io/FtrIO/#strategies)** — percentage rollout, blue-green, combining strategies, custom `IToggleDecisionStrategy`
+> **[Full strategy docs →](https://ftronoff.github.io/FtrIO/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, custom `IToggleDecisionStrategy`
 
 ---
 
@@ -171,7 +174,7 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 | Hot-reload — `ReloadOnChange` | [docs/#hotreload](https://ftronoff.github.io/FtrIO/#hotreload) |
 | Multi-environment — overlays, remote sources | [docs/#environments](https://ftronoff.github.io/FtrIO/#environments) |
 | Dynamic providers — HTTP, Azure, env vars | [docs/#providers](https://ftronoff.github.io/FtrIO/#providers) |
-| Strategy decisions — percentage, blue-green, custom | [docs/#strategies](https://ftronoff.github.io/FtrIO/#strategies) |
+| Strategy decisions — percentage, blue-green, user targeting, attribute rules, A/B testing, overrides | [docs/#strategies](https://ftronoff.github.io/FtrIO/#strategies) |
 | Compile-time validation — `FTRIO001` | [docs/#analyzer](https://ftronoff.github.io/FtrIO/#analyzer) |
 | Exceptions — `ToggleDoesNotExistException` etc. | [docs/#exceptions](https://ftronoff.github.io/FtrIO/#exceptions) |
 | Custom parser / Dependency Injection | [docs/#di](https://ftronoff.github.io/FtrIO/#di) |

@@ -373,7 +373,7 @@
     <h2><span class="icon">💡</span> Why FtrIO?</h2>
     <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:1rem;">
       <li style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.2rem;">
-        <p style="margin:0;"><strong>Zero call-site noise.</strong> <code>[Toggle]</code> is woven directly into the method's IL at compile time. A toggled method looks and calls like any normal method — no <code>if (flags.IsEnabled(...))</code>, no injected service, no wrapper at every call site. Remove the attribute and the method is back to normal.</p>
+        <p style="margin:0;"><strong>Zero call-site noise.</strong> <code>[Toggle]</code> is the only thing at every call site — all strategy wiring lives in one startup block, not spread across your codebase. A toggled method looks and calls like any normal method — no <code>if (flags.IsEnabled(...))</code>, no injected service, no wrapper at every call site. Remove the attribute and the method is back to normal.</p>
       </li>
       <li style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.2rem;">
         <p style="margin:0;"><strong><code>appsettings.json</code> as a read-through cache.</strong> Other libraries make your app depend on an external flag service being online. FtrIO flips this: providers run in the background and write their state into <code>appsettings.json</code>; <code>ToggleParser</code> always reads from the file. If the remote source goes offline, the last known state is served automatically from disk — no fallback code, no circuit breaker, no TTL to configure.</p>
@@ -432,6 +432,27 @@
           <td>❌</td>
           <td>❌</td>
           <td>❌</td>
+        </tr>
+        <tr>
+          <td><strong>Per-user targeting</strong></td>
+          <td>✅ <a href="#strategies-user"><code>UserTargetingStrategy</code></a></td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td><strong>Attribute-based rules</strong></td>
+          <td>✅ <a href="#strategies-attribute"><code>AttributeRuleStrategy</code></a></td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td><strong>A/B test assignment</strong></td>
+          <td>✅ <a href="#strategies-ab"><code>ABTestStrategy</code></a> (deterministic)</td>
+          <td>✅</td>
+          <td>⚠️ via Percentage filter</td>
+          <td>✅</td>
         </tr>
         <tr>
           <td><strong>Management UI</strong></td>
@@ -723,6 +744,51 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
         <span class="cm">// parse the window and check the current time</span>
     <span class="pu">}</span>
 <span class="pu">}</span></code></pre>
+
+    <h3 id="strategies-user">Per-user targeting</h3>
+    <p><code>UserTargetingStrategy</code> enables a toggle only for a named list of users. It requires an <code>IFtrIOContextAccessor</code> that supplies the current user ID — fail-closed if no user context is present.</p>
+    <pre><code><span class="cm">// appsettings.json</span>
+<span class="st">"Toggles"</span><span class="pu">: {</span> <span class="st">"NewDashboard"</span><span class="pu">:</span> <span class="st">"users:alice,bob"</span> <span class="pu">}</span></code></pre>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
+    <span class="kw">new</span> <span class="ty">UserTargetingStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+<span class="pu">));</span></code></pre>
+    <p>The user list is case-insensitive and comma-separated. Users not in the list get the toggle OFF; unauthenticated requests are also OFF.</p>
+
+    <h3 id="strategies-attribute">Attribute-based rules</h3>
+    <p><code>AttributeRuleStrategy</code> evaluates toggle values of the form <code>attribute:&lt;name&gt; &lt;op&gt; &lt;value&gt;</code> against attributes on the current user. Supported operators: <code>equals</code>, <code>notEquals</code>, <code>startsWith</code>, <code>endsWith</code>, <code>contains</code>, <code>in</code>, <code>notIn</code>.</p>
+    <pre><code><span class="cm">// appsettings.json</span>
+<span class="st">"Toggles"</span><span class="pu">: {</span>
+  <span class="st">"PremiumFeature"</span><span class="pu">:</span> <span class="st">"attribute:plan equals premium"</span><span class="pu">,</span>
+  <span class="st">"EUOnlyFeature"</span><span class="pu">:</span>  <span class="st">"attribute:country in IE,GB,DE,FR"</span>
+<span class="pu">}</span></code></pre>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
+    <span class="kw">new</span> <span class="ty">AttributeRuleStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+<span class="pu">));</span></code></pre>
+    <p>Attributes are supplied by your <code>IFtrIOContextAccessor</code> implementation. The strategy is fail-closed: if the attribute is missing or there is no user context, the toggle is OFF.</p>
+
+    <h3 id="strategies-ab">A/B test assignment</h3>
+    <p><code>ABTestStrategy</code> provides deterministic, per-user A/B bucketing. A user's bucket is computed with SHA-256 over <code>userId:toggleKey</code> — the same user always lands in the same group for a given toggle, with no stored state.</p>
+    <pre><code><span class="cm">// appsettings.json</span>
+<span class="st">"Toggles"</span><span class="pu">: {</span> <span class="st">"NewCheckout"</span><span class="pu">:</span> <span class="st">"ab:50"</span> <span class="pu">}</span>  <span class="cm">// 50 % of users get the feature</span></code></pre>
+    <p>To reassign the entire population without changing the percentage — for example, to start a new experiment round — append a salt:</p>
+    <pre><code><span class="st">"NewCheckout"</span><span class="pu">:</span> <span class="st">"ab:50:round2"</span>  <span class="cm">// independent bucket from "ab:50"</span></code></pre>
+    <p>The salt makes the hash input <code>userId:toggleKey:round2</code>. The same user can be in different groups across experiments with different salts. Without a user context the strategy falls back to a random per-call check (equivalent to <code>PercentageRolloutStrategy</code>).</p>
+
+    <h3 id="overrides">Per-user overrides</h3>
+    <p><code>TogglesOverrides</code> in <code>appsettings.json</code> lets you force a specific toggle ON or OFF for a named user, unconditionally before any strategy runs. Useful for QA, support escalations, or internal dogfooding.</p>
+    <pre><code><span class="st">"TogglesOverrides"</span><span class="pu">: {</span>
+  <span class="st">"NewCheckout"</span><span class="pu">: {</span>
+    <span class="st">"alice"</span><span class="pu">:</span> <span class="kw">true</span><span class="pu">,</span>   <span class="cm">// always ON for alice regardless of ab:50</span>
+    <span class="st">"bob"</span><span class="pu">:</span>   <span class="kw">false</span>    <span class="cm">// always OFF for bob regardless of ab:50</span>
+  <span class="pu">}</span>
+<span class="pu">}</span></code></pre>
+    <p>Wire up <code>OverrideResolver</code> alongside your strategy pipeline:</p>
+    <pre><code><span class="kw">var</span> <span class="nm">parser</span> <span class="pu">=</span> <span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
+    <span class="kw">new</span> <span class="ty">OverrideResolver</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">,</span> <span class="kw">new</span> <span class="ty">ToggleParser</span><span class="pu">()),</span>
+    <span class="kw">new</span> <span class="ty">UserTargetingStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">),</span>
+    <span class="kw">new</span> <span class="ty">AttributeRuleStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">),</span>
+    <span class="kw">new</span> <span class="ty">ABTestStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+<span class="pu">);</span></code></pre>
   </section>
 
   <!-- PROVIDERS -->
