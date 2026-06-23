@@ -135,7 +135,7 @@ Providers push updates into `ToggleProviderBuffer`; the buffer flushes to `appse
 
 > **Don't need automated sync?** [FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster) lets you change toggle values on demand via a UI — no provider pipeline required. It writes directly through `ToggleProviderBuffer` and your app picks up the change live.
 
-> **[Full provider docs →](https://ftronoff.github.io/FtrIO/#providers)** — HTTP, Azure App Config, env vars, buffer config, CompositeToggleParser
+> **[Full provider docs →](https://docs.ftrio.dev/#providers)** — HTTP, Azure App Config, env vars, buffer config, CompositeToggleParser
 
 ---
 
@@ -157,7 +157,7 @@ ToggleParserProvider.Configure(new StrategyToggleParser(
 }
 ```
 
-> **[Full strategy docs →](https://ftronoff.github.io/FtrIO/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, custom `IToggleDecisionStrategy`
+> **[Full strategy docs →](https://docs.ftrio.dev/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, custom `IToggleDecisionStrategy`
 
 ---
 
@@ -165,7 +165,7 @@ ToggleParserProvider.Configure(new StrategyToggleParser(
 
 Each server needs only its own `appsettings.json` — prod, staging, and dev are fully independent with no FtrIO configuration required. For single-machine overlays (`appsettings.{env}.json`) or remote config sources, see the docs.
 
-> **[Multi-environment docs →](https://ftronoff.github.io/FtrIO/#environments)**
+> **[Multi-environment docs →](https://docs.ftrio.dev/#environments)**
 
 ---
 
@@ -173,17 +173,17 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 
 | Topic | Docs |
 |-------|------|
-| Async — `[ToggleAsync]`, `ExecuteMethodIfToggleOnAsync` | [docs/#async](https://ftronoff.github.io/FtrIO/#async) |
-| Hot-reload — `ReloadOnChange` | [docs/#hotreload](https://ftronoff.github.io/FtrIO/#hotreload) |
-| Multi-environment — overlays, remote sources | [docs/#environments](https://ftronoff.github.io/FtrIO/#environments) |
-| Dynamic providers — HTTP, Azure, env vars | [docs/#providers](https://ftronoff.github.io/FtrIO/#providers) |
-| Strategy decisions — percentage, blue-green, user targeting, attribute rules, A/B testing, overrides | [docs/#strategies](https://ftronoff.github.io/FtrIO/#strategies) |
-| Compile-time validation — `FTRIO001` | [docs/#analyzer](https://ftronoff.github.io/FtrIO/#analyzer) |
-| Exceptions — `ToggleDoesNotExistException` etc. | [docs/#exceptions](https://ftronoff.github.io/FtrIO/#exceptions) |
-| Custom parser / Dependency Injection | [docs/#di](https://ftronoff.github.io/FtrIO/#di) |
-| Manual control — `ExecuteMethodIfToggleOn` | [docs](https://ftronoff.github.io/FtrIO/) |
+| Async — `[ToggleAsync]`, `ExecuteMethodIfToggleOnAsync` | [docs/#async](https://docs.ftrio.dev/#async) |
+| Hot-reload — `ReloadOnChange` | [docs/#hotreload](https://docs.ftrio.dev/#hotreload) |
+| Multi-environment — overlays, remote sources | [docs/#environments](https://docs.ftrio.dev/#environments) |
+| Dynamic providers — HTTP, Azure, env vars | [docs/#providers](https://docs.ftrio.dev/#providers) |
+| Strategy decisions — percentage, blue-green, user targeting, attribute rules, A/B testing, overrides | [docs/#strategies](https://docs.ftrio.dev/#strategies) |
+| Compile-time validation — `FTRIO001` | [docs/#analyzer](https://docs.ftrio.dev/#analyzer) |
+| Exceptions — `ToggleDoesNotExistException` etc. | [docs/#exceptions](https://docs.ftrio.dev/#exceptions) |
+| Custom parser / Dependency Injection | [docs/#di](https://docs.ftrio.dev/#di) |
+| Manual control — `ExecuteMethodIfToggleOn` | [docs](https://docs.ftrio.dev/) |
 | Companion tooling — FtrIO.onetwo | [github.com/FtrOnOff/FtrIO.onetwo](https://github.com/FtrOnOff/FtrIO.onetwo) |
 | Companion UI — FtrIO.Toaster | [github.com/FtrOnOff/FtrIO.Toaster](https://github.com/FtrOnOff/FtrIO.Toaster) |
 | CI/CD — export-manifest-action | [github.com/FtrOnOff/export-manifest-action](https://github.com/FtrOnOff/export-manifest-action) |
 | CI/CD — release-check-action | [github.com/FtrOnOff/release-check-action](https://github.com/FtrOnOff/release-check-action) |
-| CI/CD — full pipeline docs | [docs/#cicd](https://ftronoff.github.io/FtrIO/#cicd) |
+| CI/CD — full pipeline docs | [docs/#cicd](https://docs.ftrio.dev/#cicd) |
