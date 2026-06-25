@@ -44,9 +44,9 @@ namespace FtrIO.Providers.Http
             _ownsClient = client == null;
             _client = client ?? new HttpClient();
 
-            var interval = pollInterval ?? TimeSpan.FromSeconds(30);
+            var pollingInterval = pollInterval ?? TimeSpan.FromSeconds(30);
             // Fire immediately (TimeSpan.Zero) so first push happens at startup
-            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, interval);
+            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, pollingInterval);
         }
 
         private async Task PollAsync()
@@ -56,15 +56,15 @@ namespace FtrIO.Providers.Http
                 using var response = await _client.GetAsync(_url).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                await using var stream = await response.Content
+                await using var responseStream = await response.Content
                     .ReadAsStreamAsync().ConfigureAwait(false);
-                using var doc = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+                using var togglesDocument = await JsonDocument.ParseAsync(responseStream).ConfigureAwait(false);
 
-                if (!doc.RootElement.TryGetProperty("Toggles", out var toggles))
+                if (!togglesDocument.RootElement.TryGetProperty("Toggles", out var toggles))
                     return; // malformed response — skip, don't discard existing appsettings.json state
 
-                foreach (var prop in toggles.EnumerateObject())
-                    _buffer.Stage(prop.Name, prop.Value.ToString());
+                foreach (var toggleProperty in toggles.EnumerateObject())
+                    _buffer.Stage(toggleProperty.Name, toggleProperty.Value.ToString());
             }
             catch
             {

@@ -4,12 +4,12 @@ namespace FtrIO.Classes
 
     public class OverrideResolver
     {
-        private readonly IFtrIOContextAccessor _accessor;
+        private readonly IFtrIOContextAccessor _contextAccessor;
         private readonly IToggleParser _configReader;
 
-        public OverrideResolver(IFtrIOContextAccessor accessor, IToggleParser configReader)
+        public OverrideResolver(IFtrIOContextAccessor contextAccessor, IToggleParser configReader)
         {
-            _accessor = accessor;
+            _contextAccessor = contextAccessor;
             _configReader = configReader;
         }
 
@@ -19,7 +19,7 @@ namespace FtrIO.Classes
         /// </summary>
         public bool? GetOverride(string toggleKey)
         {
-            var userId = _accessor.GetUserId();
+            var userId = _contextAccessor.GetUserId();
             if (userId is null) return null;
             return _configReader.GetOverride(toggleKey, userId);
         }

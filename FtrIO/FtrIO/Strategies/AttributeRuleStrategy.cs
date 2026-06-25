@@ -4,56 +4,56 @@ namespace FtrIO.Strategies
 
     public class AttributeRuleStrategy : IToggleDecisionStrategy
     {
-        private readonly IFtrIOContextAccessor _accessor;
+        private readonly IFtrIOContextAccessor _contextAccessor;
 
         private static readonly string[] Operators =
             new[] { "equals", "notEquals", "startsWith", "endsWith", "contains", "in", "notIn" };
 
-        public AttributeRuleStrategy(IFtrIOContextAccessor accessor)
-            => _accessor = accessor;
+        public AttributeRuleStrategy(IFtrIOContextAccessor contextAccessor)
+            => _contextAccessor = contextAccessor;
 
         public bool CanHandle(string rawValue)
             => rawValue.StartsWith("attribute:", StringComparison.OrdinalIgnoreCase)
-            && Operators.Any(op => rawValue.Contains($" {op} ", StringComparison.OrdinalIgnoreCase));
+            && Operators.Any(candidateOperator => rawValue.Contains($" {candidateOperator} ", StringComparison.OrdinalIgnoreCase));
 
         public bool ShouldExecute(string toggleKey, string rawValue)
         {
-            if (!TryParseRule(rawValue, out var attribute, out var op, out var value))
+            if (!TryParseRule(rawValue, out var attributeName, out var comparisonOperator, out var expectedValue))
                 return false;
 
-            var attributeValue = _accessor.GetAttribute(attribute);
+            var attributeValue = _contextAccessor.GetAttribute(attributeName);
             if (attributeValue is null) return false;
 
-            return op.ToLowerInvariant() switch
+            return comparisonOperator.ToLowerInvariant() switch
             {
-                "equals"     => attributeValue.Equals(value, StringComparison.OrdinalIgnoreCase),
-                "notequals"  => !attributeValue.Equals(value, StringComparison.OrdinalIgnoreCase),
-                "startswith" => attributeValue.StartsWith(value, StringComparison.OrdinalIgnoreCase),
-                "endswith"   => attributeValue.EndsWith(value, StringComparison.OrdinalIgnoreCase),
-                "contains"   => attributeValue.Contains(value, StringComparison.OrdinalIgnoreCase),
-                "in"         => value.Split(',', StringSplitOptions.TrimEntries)
+                "equals"     => attributeValue.Equals(expectedValue, StringComparison.OrdinalIgnoreCase),
+                "notequals"  => !attributeValue.Equals(expectedValue, StringComparison.OrdinalIgnoreCase),
+                "startswith" => attributeValue.StartsWith(expectedValue, StringComparison.OrdinalIgnoreCase),
+                "endswith"   => attributeValue.EndsWith(expectedValue, StringComparison.OrdinalIgnoreCase),
+                "contains"   => attributeValue.Contains(expectedValue, StringComparison.OrdinalIgnoreCase),
+                "in"         => expectedValue.Split(',', StringSplitOptions.TrimEntries)
                                      .Contains(attributeValue, StringComparer.OrdinalIgnoreCase),
-                "notin"      => !value.Split(',', StringSplitOptions.TrimEntries)
+                "notin"      => !expectedValue.Split(',', StringSplitOptions.TrimEntries)
                                       .Contains(attributeValue, StringComparer.OrdinalIgnoreCase),
                 _            => false
             };
         }
 
         private static bool TryParseRule(string rawValue,
-            out string attribute, out string op, out string value)
+            out string attributeName, out string comparisonOperator, out string expectedValue)
         {
-            attribute = op = value = string.Empty;
-            var body = rawValue["attribute:".Length..].Trim();
+            attributeName = comparisonOperator = expectedValue = string.Empty;
+            var ruleBody = rawValue["attribute:".Length..].Trim();
 
-            foreach (var candidate in Operators)
+            foreach (var candidateOperator in Operators)
             {
-                var marker = $" {candidate} ";
-                var idx = body.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) continue;
+                var operatorMarker = $" {candidateOperator} ";
+                var operatorIndex = ruleBody.IndexOf(operatorMarker, StringComparison.OrdinalIgnoreCase);
+                if (operatorIndex < 0) continue;
 
-                attribute = body[..idx].Trim();
-                op        = candidate;
-                value     = body[(idx + marker.Length)..].Trim();
+                attributeName      = ruleBody[..operatorIndex].Trim();
+                comparisonOperator = candidateOperator;
+                expectedValue      = ruleBody[(operatorIndex + operatorMarker.Length)..].Trim();
                 return true;
             }
 

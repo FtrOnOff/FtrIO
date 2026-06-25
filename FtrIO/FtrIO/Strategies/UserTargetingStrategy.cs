@@ -4,23 +4,23 @@ namespace FtrIO.Strategies
 
     public class UserTargetingStrategy : IToggleDecisionStrategy
     {
-        private readonly IFtrIOContextAccessor _accessor;
+        private readonly IFtrIOContextAccessor _contextAccessor;
 
-        public UserTargetingStrategy(IFtrIOContextAccessor accessor)
-            => _accessor = accessor;
+        public UserTargetingStrategy(IFtrIOContextAccessor contextAccessor)
+            => _contextAccessor = contextAccessor;
 
         public bool CanHandle(string rawValue)
             => rawValue.StartsWith("users:", StringComparison.OrdinalIgnoreCase);
 
         public bool ShouldExecute(string toggleKey, string rawValue)
         {
-            var currentUser = _accessor.GetUserId();
-            if (currentUser is null) return false;
+            var currentUserId = _contextAccessor.GetUserId();
+            if (currentUserId is null) return false;
 
-            var allowedUsers = rawValue["users:".Length..]
+            var allowedUserIds = rawValue["users:".Length..]
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-            return allowedUsers.Contains(currentUser, StringComparer.OrdinalIgnoreCase);
+            return allowedUserIds.Contains(currentUserId, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

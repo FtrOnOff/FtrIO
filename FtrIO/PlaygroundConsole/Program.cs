@@ -124,6 +124,13 @@ internal class ToggleDemo
         Show(TestingNoAttribute,  "TestingNoAttribute",  "(no [Toggle])");
     }
 
+    public void TestingOne()
+    {
+        TestingTrue();
+        TestingABTest();
+        TestingPercentage();
+    }
+
     [Toggle]
     private void TestingTrue()
     {

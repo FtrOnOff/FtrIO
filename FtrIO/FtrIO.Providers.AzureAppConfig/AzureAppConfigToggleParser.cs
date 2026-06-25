@@ -51,8 +51,8 @@ namespace FtrIO.Providers.AzureAppConfig
             _keyPrefix = keyPrefix ?? throw new ArgumentNullException(nameof(keyPrefix));
             _label = label;
 
-            var interval = pollInterval ?? TimeSpan.FromSeconds(30);
-            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, interval);
+            var pollingInterval = pollInterval ?? TimeSpan.FromSeconds(30);
+            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, pollingInterval);
         }
 
         public AzureAppConfigToggleParser(
@@ -68,8 +68,8 @@ namespace FtrIO.Providers.AzureAppConfig
             _keyPrefix = keyPrefix ?? throw new ArgumentNullException(nameof(keyPrefix));
             _label = label;
 
-            var interval = pollInterval ?? TimeSpan.FromSeconds(30);
-            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, interval);
+            var pollingInterval = pollInterval ?? TimeSpan.FromSeconds(30);
+            _timer = new Timer(_ => _ = PollAsync(), null, TimeSpan.Zero, pollingInterval);
         }
 
         private async Task PollAsync()

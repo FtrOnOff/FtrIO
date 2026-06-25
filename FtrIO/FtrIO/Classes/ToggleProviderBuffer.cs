@@ -88,24 +88,24 @@ namespace FtrIO.Classes
             {
                 // Drain the staging dict. Keys added by providers between now and the
                 // end of the write will appear in the next flush, not this one.
-                var toWrite = DrainPending();
-                if (toWrite.Count == 0) return;
+                var togglesToWrite = DrainPending();
+                if (togglesToWrite.Count == 0) return;
 
                 try
                 {
-                    var existing = File.Exists(_settingsPath)
+                    var existingJson = File.Exists(_settingsPath)
                         ? File.ReadAllText(_settingsPath, Encoding.UTF8)
                         : "{}";
 
-                    var updated = MergeToggles(existing, toWrite);
-                    WriteAtomically(updated);
+                    var updatedJson = MergeToggles(existingJson, togglesToWrite);
+                    WriteAtomically(updatedJson);
                 }
                 catch
                 {
                     // Write failed — re-stage the values so the next flush retries them.
                     // TryAdd: preserves any newer value that arrived during the failed write.
-                    foreach (var kv in toWrite)
-                        _pending.TryAdd(kv.Key, kv.Value);
+                    foreach (var pendingEntry in togglesToWrite)
+                        _pending.TryAdd(pendingEntry.Key, pendingEntry.Value);
                 }
             }
             finally
@@ -136,26 +136,26 @@ namespace FtrIO.Classes
 
         private static string MergeToggles(string existingJson, Dictionary<string, string> updates)
         {
-            using var doc = JsonDocument.Parse(existingJson,
+            using var existingDocument = JsonDocument.Parse(existingJson,
                 new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip });
 
-            using var ms = new MemoryStream();
-            using var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true });
+            using var outputStream = new MemoryStream();
+            using var writer = new Utf8JsonWriter(outputStream, new JsonWriterOptions { Indented = true });
 
             writer.WriteStartObject();
 
             var togglesWritten = false;
-            foreach (var prop in doc.RootElement.EnumerateObject())
+            foreach (var rootProperty in existingDocument.RootElement.EnumerateObject())
             {
-                if (prop.Name == "Toggles")
+                if (rootProperty.Name == "Toggles")
                 {
                     togglesWritten = true;
                     writer.WritePropertyName("Toggles");
-                    WriteTogglesSection(writer, prop.Value, updates);
+                    WriteTogglesSection(writer, rootProperty.Value, updates);
                 }
                 else
                 {
-                    prop.WriteTo(writer);
+                    rootProperty.WriteTo(writer);
                 }
             }
 
@@ -164,15 +164,15 @@ namespace FtrIO.Classes
             {
                 writer.WritePropertyName("Toggles");
                 writer.WriteStartObject();
-                foreach (var kv in updates)
-                    writer.WriteString(kv.Key, kv.Value);
+                foreach (var update in updates)
+                    writer.WriteString(update.Key, update.Value);
                 writer.WriteEndObject();
             }
 
             writer.WriteEndObject();
             writer.Flush();
 
-            return Encoding.UTF8.GetString(ms.ToArray());
+            return Encoding.UTF8.GetString(outputStream.ToArray());
         }
 
         private static void WriteTogglesSection(
@@ -181,22 +181,22 @@ namespace FtrIO.Classes
             Dictionary<string, string> updates)
         {
             writer.WriteStartObject();
-            var written = new HashSet<string>(StringComparer.Ordinal);
+            var writtenToggleNames = new HashSet<string>(StringComparer.Ordinal);
 
-            foreach (var toggle in existing.EnumerateObject())
+            foreach (var existingToggle in existing.EnumerateObject())
             {
-                writer.WritePropertyName(toggle.Name);
-                if (updates.TryGetValue(toggle.Name, out var updated))
-                    writer.WriteStringValue(updated);
+                writer.WritePropertyName(existingToggle.Name);
+                if (updates.TryGetValue(existingToggle.Name, out var updatedValue))
+                    writer.WriteStringValue(updatedValue);
                 else
-                    toggle.Value.WriteTo(writer); // preserves original JSON type (bool, string, etc.)
-                written.Add(toggle.Name);
+                    existingToggle.Value.WriteTo(writer); // preserves original JSON type (bool, string, etc.)
+                writtenToggleNames.Add(existingToggle.Name);
             }
 
             // Keys from providers that don't yet exist in appsettings.json
-            foreach (var kv in updates)
-                if (!written.Contains(kv.Key))
-                    writer.WriteString(kv.Key, kv.Value);
+            foreach (var update in updates)
+                if (!writtenToggleNames.Contains(update.Key))
+                    writer.WriteString(update.Key, update.Value);
 
             writer.WriteEndObject();
         }
@@ -208,16 +208,16 @@ namespace FtrIO.Classes
         // must still write to appsettings.json — the server's own file is its environment.
         private static string? ResolveEnvironment(string basePath)
         {
-            var path = Path.Combine(basePath, "appsettings.json");
-            if (!File.Exists(path)) return null;
+            var settingsFilePath = Path.Combine(basePath, "appsettings.json");
+            if (!File.Exists(settingsFilePath)) return null;
 
             try
             {
-                using var doc = JsonDocument.Parse(File.ReadAllText(path));
-                if (doc.RootElement.TryGetProperty("FtrIO", out var ftrio)
-                    && ftrio.TryGetProperty("Environment", out var env)
-                    && env.GetString() is { Length: > 0 } envValue)
-                    return envValue;
+                using var settingsDocument = JsonDocument.Parse(File.ReadAllText(settingsFilePath));
+                if (settingsDocument.RootElement.TryGetProperty("FtrIO", out var ftrioSection)
+                    && ftrioSection.TryGetProperty("Environment", out var environmentElement)
+                    && environmentElement.GetString() is { Length: > 0 } environmentName)
+                    return environmentName;
             }
             catch { }
 
@@ -226,16 +226,16 @@ namespace FtrIO.Classes
 
         private static TimeSpan ReadFlushIntervalFromConfig(string basePath)
         {
-            var path = Path.Combine(basePath, "appsettings.json");
-            if (!File.Exists(path)) return TimeSpan.FromSeconds(5);
+            var settingsFilePath = Path.Combine(basePath, "appsettings.json");
+            if (!File.Exists(settingsFilePath)) return TimeSpan.FromSeconds(5);
 
             try
             {
-                using var doc = JsonDocument.Parse(File.ReadAllText(path));
-                if (doc.RootElement.TryGetProperty("FtrIO", out var ftrio)
-                    && ftrio.TryGetProperty("FlushInterval", out var interval)
-                    && interval.TryGetInt32(out var seconds))
-                    return TimeSpan.FromSeconds(seconds);
+                using var settingsDocument = JsonDocument.Parse(File.ReadAllText(settingsFilePath));
+                if (settingsDocument.RootElement.TryGetProperty("FtrIO", out var ftrioSection)
+                    && ftrioSection.TryGetProperty("FlushInterval", out var flushIntervalElement)
+                    && flushIntervalElement.TryGetInt32(out var flushIntervalSeconds))
+                    return TimeSpan.FromSeconds(flushIntervalSeconds);
             }
             catch { }
 

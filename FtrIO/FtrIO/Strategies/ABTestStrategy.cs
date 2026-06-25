@@ -4,45 +4,45 @@ namespace FtrIO.Strategies
 
     public class ABTestStrategy : IToggleDecisionStrategy
     {
-        private readonly IFtrIOContextAccessor _accessor;
+        private readonly IFtrIOContextAccessor _contextAccessor;
 
-        public ABTestStrategy(IFtrIOContextAccessor accessor)
-            => _accessor = accessor;
+        public ABTestStrategy(IFtrIOContextAccessor contextAccessor)
+            => _contextAccessor = contextAccessor;
 
         public bool CanHandle(string rawValue)
         {
             if (!rawValue.StartsWith("ab:", StringComparison.OrdinalIgnoreCase)) return false;
-            var parts = rawValue[3..].Split(':', 2);
-            return int.TryParse(parts[0], out var pct) && pct is >= 0 and <= 100;
+            var valueSegments = rawValue[3..].Split(':', 2);
+            return int.TryParse(valueSegments[0], out var parsedPercentage) && parsedPercentage is >= 0 and <= 100;
         }
 
         public bool ShouldExecute(string toggleKey, string rawValue)
         {
-            var (percentage, salt) = ParseValue(rawValue);
-            var userId = _accessor.GetUserId();
+            var (rolloutPercentage, bucketingSalt) = ParseValue(rawValue);
+            var currentUserId = _contextAccessor.GetUserId();
 
-            if (userId is null)
-                return Random.Shared.Next(100) < percentage;
+            if (currentUserId is null)
+                return Random.Shared.Next(100) < rolloutPercentage;
 
-            return ComputeBucket(userId, toggleKey, salt) < percentage;
+            return ComputeBucket(currentUserId, toggleKey, bucketingSalt) < rolloutPercentage;
         }
 
         private static (int percentage, string salt) ParseValue(string rawValue)
         {
-            var parts = rawValue[3..].Split(':', 2);
-            var percentage = int.TryParse(parts[0], out var pct) ? pct : 0;
-            var salt = parts.Length > 1 ? parts[1] : string.Empty;
-            return (percentage, salt);
+            var valueSegments = rawValue[3..].Split(':', 2);
+            var rolloutPercentage = int.TryParse(valueSegments[0], out var parsedPercentage) ? parsedPercentage : 0;
+            var bucketingSalt = valueSegments.Length > 1 ? valueSegments[1] : string.Empty;
+            return (rolloutPercentage, bucketingSalt);
         }
 
         private static int ComputeBucket(string userId, string toggleKey, string salt = "")
         {
-            var input = string.IsNullOrEmpty(salt)
+            var hashInput = string.IsNullOrEmpty(salt)
                 ? $"{userId}:{toggleKey}"
                 : $"{userId}:{toggleKey}:{salt}";
-            var hash = System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes(input));
-            return Math.Abs(BitConverter.ToInt32(hash, 0)) % 100;
+            var hashBytes = System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(hashInput));
+            return Math.Abs(BitConverter.ToInt32(hashBytes, 0)) % 100;
         }
     }
 }

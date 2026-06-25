@@ -49,27 +49,27 @@ namespace FtrIO.Strategies
 
         private static IConfiguration BuildConfig(string basePath)
         {
-            var bootstrap = new ConfigurationBuilder()
+            var bootstrapConfiguration = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: true)
                 .Build();
 
             var reloadOnChange = string.Equals(
-                bootstrap["FtrIO:ReloadOnChange"], "true", StringComparison.OrdinalIgnoreCase);
+                bootstrapConfiguration["FtrIO:ReloadOnChange"], "true", StringComparison.OrdinalIgnoreCase);
 
-            var environment = bootstrap["FtrIO:Environment"]
+            var environment = bootstrapConfiguration["FtrIO:Environment"]
                 ?? System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
                 ?? System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 
-            var builder = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange);
 
             if (environment != null)
-                builder.AddJsonFile(
+                configurationBuilder.AddJsonFile(
                     $"appsettings.{environment}.json", optional: true, reloadOnChange: reloadOnChange);
 
-            return builder.Build();
+            return configurationBuilder.Build();
         }
     }
 }

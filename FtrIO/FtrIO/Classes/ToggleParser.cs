@@ -18,28 +18,28 @@
             if (_configFileExists)
             {
                 // First pass: read FtrIO settings from the base file only.
-                var bootstrap = new ConfigurationBuilder()
+                var bootstrapConfiguration = new ConfigurationBuilder()
                     .SetBasePath(basePath)
                     .AddJsonFile("appsettings.json", optional: true)
                     .Build();
 
                 var reloadOnChange = string.Equals(
-                    bootstrap["FtrIO:ReloadOnChange"], "true", StringComparison.OrdinalIgnoreCase);
+                    bootstrapConfiguration["FtrIO:ReloadOnChange"], "true", StringComparison.OrdinalIgnoreCase);
 
-                var environment = bootstrap["FtrIO:Environment"]
+                var environment = bootstrapConfiguration["FtrIO:Environment"]
                     ?? System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
                     ?? System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 
                 // Second pass: build the live config with correct reload and env layer.
-                var builder = new ConfigurationBuilder()
+                var configurationBuilder = new ConfigurationBuilder()
                     .SetBasePath(basePath)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange);
 
                 if (environment != null)
-                    builder.AddJsonFile(
+                    configurationBuilder.AddJsonFile(
                         $"appsettings.{environment}.json", optional: true, reloadOnChange: reloadOnChange);
 
-                var config = builder.Build();
+                var config = configurationBuilder.Build();
                 _toggles = config.GetSection("Toggles");
                 _overridesSection = config.GetSection("TogglesOverrides");
             }
@@ -85,10 +85,10 @@
 
         public bool? GetOverride(string toggleKey, string userId)
         {
-            var raw = _overridesSection?[$"{toggleKey}:{userId}"];
-            if (raw is null) return null;
-            if (raw.Equals("true", StringComparison.OrdinalIgnoreCase) || raw == "1") return true;
-            if (raw.Equals("false", StringComparison.OrdinalIgnoreCase) || raw == "0") return false;
+            var overrideValue = _overridesSection?[$"{toggleKey}:{userId}"];
+            if (overrideValue is null) return null;
+            if (overrideValue.Equals("true", StringComparison.OrdinalIgnoreCase) || overrideValue == "1") return true;
+            if (overrideValue.Equals("false", StringComparison.OrdinalIgnoreCase) || overrideValue == "0") return false;
             return null;
         }
     }
