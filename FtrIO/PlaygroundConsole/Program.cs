@@ -1,24 +1,20 @@
 using FtrIO;
-using FtrIO.Classes;
 using FtrIO.Interfaces;
-using FtrIO.Strategies;
 using System.Text.Json;
 
 // ── Simulated context accessor ────────────────────────────────────────────────
 var accessor = new SimulatedContextAccessor();
 
 // ── Strategy pipeline + overrides ────────────────────────────────────────────
-var overrideResolver = new OverrideResolver(accessor, new ToggleParser());
-
-var parser = new StrategyToggleParser(
-    overrideResolver,
-    new UserTargetingStrategy(accessor),
-    new AttributeRuleStrategy(accessor),
-    new ABTestStrategy(accessor),
-    new PercentageRolloutStrategy(),
-    new BlueGreenStrategy()  // slot read from FtrIO:BlueGreen:CurrentSlot in appsettings.json
-);
-ToggleParserProvider.Configure(parser);
+// Built fluently via ToggleParserBuilder. Strategy order is preserved exactly:
+// the context-aware strategies (user targeting → attribute rules → A/B) come
+// first, then percentage rollout, then blue/green. Overrides are checked before
+// any strategy in the chain.
+ToggleParserProvider.ConfigureBuilder(builder => builder
+    .WithContextStrategies(accessor)
+    .WithPercentageRollout()
+    .WithBlueGreen()        // slot read from FtrIO:BlueGreen:CurrentSlot in appsettings.json
+    .WithOverrides(accessor));
 
 // ── Startup banner ────────────────────────────────────────────────────────────
 var baseDir = AppContext.BaseDirectory;
