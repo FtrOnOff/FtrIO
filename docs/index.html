@@ -698,6 +698,7 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
   <section id="strategies">
     <h2><span class="icon">🎲</span> Strategy-based decisions</h2>
     <p><code>StrategyToggleParser</code> is a drop-in replacement for <code>ToggleParser</code> that routes raw config values through a chain of <code>IToggleDecisionStrategy</code> implementations. <code>BooleanStrategy</code> is always appended as the final fallback so existing <code>true</code>/<code>false</code> values continue to work with no changes.</p>
+    <p>The recommended way to assemble a pipeline is the fluent <a href="#strategies-builder"><code>ToggleParserBuilder</code></a> — see <a href="#strategies-builder">Fluent configuration</a>. The examples below show each strategy on its own; in practice you combine them in a single builder chain.</p>
 
     <h3>Percentage rollout</h3>
     <p>Any value ending in <code>%</code> is handled by <code>PercentageRolloutStrategy</code>. The check is probabilistic per-call — a 20% rollout means roughly 1 in 5 calls execute the method body:</p>
@@ -705,7 +706,7 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
 <span class="pu">{</span> <span class="st">"Toggles"</span><span class="pu">:</span> <span class="pu">{</span> <span class="st">"NewCheckout"</span><span class="pu">:</span> <span class="st">"20%"</span> <span class="pu">}</span> <span class="pu">}</span>
 
 <span class="cm">// startup</span>
-<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">PercentageRolloutStrategy</span><span class="pu">()));</span>
+<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span><span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">());</span>
 
 <span class="at">[Toggle]</span>
 <span class="kw">public void</span> <span class="nm">NewCheckout</span><span class="pu">()</span> <span class="pu">{</span> <span class="pu">...</span> <span class="pu">}</span>  <span class="cm">// runs ~20% of the time</span></code></pre>
@@ -722,19 +723,24 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
 <span class="pu">}</span>
 
 <span class="cm">// startup — reads slot config automatically</span>
-<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">BlueGreenStrategy</span><span class="pu">()));</span>
+<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span><span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">());</span>
 
 <span class="at">[Toggle]</span>
 <span class="kw">public void</span> <span class="nm">PaymentV2</span><span class="pu">()</span> <span class="pu">{</span> <span class="pu">...</span> <span class="pu">}</span>  <span class="cm">// runs only when CurrentSlot matches "blue"</span></code></pre>
     <p>To switch to green: set <code>"CurrentSlot": "green"</code> in <code>appsettings.json</code>. With <code>ReloadOnChange: true</code> the change takes effect immediately — no redeploy, no restart.</p>
 
     <h3>Combining strategies</h3>
-    <p>Strategies are tried in registration order — the first whose <code>CanHandle</code> returns <code>true</code> wins. <code>BooleanStrategy</code> is always appended automatically as the final fallback.</p>
-    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
+    <p>Strategies are tried in the order you add them — the first whose <code>CanHandle</code> returns <code>true</code> wins. <code>BooleanStrategy</code> is always appended automatically as the final fallback. Build the chain fluently:</p>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
+    <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
+    <span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">());</span>  <span class="cm">// BooleanStrategy auto-appended — handles true/false/1/0</span></code></pre>
+    <details>
+      <summary>Without the builder — construct <code>StrategyToggleParser</code> directly</summary>
+      <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
     <span class="kw">new</span> <span class="ty">PercentageRolloutStrategy</span><span class="pu">(),</span>
     <span class="kw">new</span> <span class="ty">BlueGreenStrategy</span><span class="pu">()</span>
-    <span class="cm">// BooleanStrategy auto-appended — handles true/false/1/0</span>
 <span class="pu">));</span></code></pre>
+    </details>
 
     <h3>Custom strategies</h3>
     <p>Implement <code>IToggleDecisionStrategy</code> to add any decision logic your application needs:</p>
@@ -751,9 +757,7 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
     <p><code>UserTargetingStrategy</code> enables a toggle only for a named list of users. It requires an <code>IFtrIOContextAccessor</code> that supplies the current user ID — fail-closed if no user context is present.</p>
     <pre><code><span class="cm">// appsettings.json</span>
 <span class="st">"Toggles"</span><span class="pu">: {</span> <span class="st">"NewDashboard"</span><span class="pu">:</span> <span class="st">"users:alice,bob"</span> <span class="pu">}</span></code></pre>
-    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
-    <span class="kw">new</span> <span class="ty">UserTargetingStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
-<span class="pu">));</span></code></pre>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span><span class="pu">.</span><span class="nm">WithUserTargeting</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
     <p>The user list is case-insensitive and comma-separated. Users not in the list get the toggle OFF; unauthenticated requests are also OFF.</p>
 
     <h3 id="strategies-attribute">Attribute-based rules</h3>
@@ -763,9 +767,7 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
   <span class="st">"PremiumFeature"</span><span class="pu">:</span> <span class="st">"attribute:plan equals premium"</span><span class="pu">,</span>
   <span class="st">"EUOnlyFeature"</span><span class="pu">:</span>  <span class="st">"attribute:country in IE,GB,DE,FR"</span>
 <span class="pu">}</span></code></pre>
-    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
-    <span class="kw">new</span> <span class="ty">AttributeRuleStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
-<span class="pu">));</span></code></pre>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span><span class="pu">.</span><span class="nm">WithAttributeRules</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
     <p>Attributes are supplied by your <code>IFtrIOContextAccessor</code> implementation. The strategy is fail-closed: if the attribute is missing or there is no user context, the toggle is OFF.</p>
 
     <h3 id="strategies-ab">A/B test assignment</h3>
@@ -784,13 +786,27 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
     <span class="st">"bob"</span><span class="pu">:</span>   <span class="kw">false</span>    <span class="cm">// always OFF for bob regardless of ab:50</span>
   <span class="pu">}</span>
 <span class="pu">}</span></code></pre>
-    <p>Wire up <code>OverrideResolver</code> alongside your strategy pipeline:</p>
-    <pre><code><span class="kw">var</span> <span class="nm">parser</span> <span class="pu">=</span> <span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
-    <span class="kw">new</span> <span class="ty">OverrideResolver</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">,</span> <span class="kw">new</span> <span class="ty">ToggleParser</span><span class="pu">()),</span>
-    <span class="kw">new</span> <span class="ty">UserTargetingStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">),</span>
-    <span class="kw">new</span> <span class="ty">AttributeRuleStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">),</span>
-    <span class="kw">new</span> <span class="ty">ABTestStrategy</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
-<span class="pu">);</span></code></pre>
+    <p>Add overrides to your pipeline with <code>WithOverrides</code> — they are checked before any strategy in the chain:</p>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
+    <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
+
+    <h3 id="strategies-builder">Fluent configuration</h3>
+    <p><code>ToggleParserBuilder</code> turns the nested <code>StrategyToggleParser</code> constructor into a readable chain of named methods. Strategies are added in call order — so the chain reads exactly as the pipeline runs — and <code>BooleanStrategy</code> is still appended automatically. <code>WithContextStrategies</code> adds <code>UserTargetingStrategy</code>, <code>AttributeRuleStrategy</code>, and <code>ABTestStrategy</code> in one call when they share the same <code>IFtrIOContextAccessor</code>.</p>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span>
+    <span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Builder</span><span class="pu">()</span>
+        <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>  <span class="cm">// user targeting + attribute rules + A/B</span>
+        <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
+        <span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">()</span>
+        <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+        <span class="pu">.</span><span class="nm">Build</span><span class="pu">());</span></code></pre>
+    <p><code>ConfigureBuilder</code> is a convenience overload that builds the parser and registers it in a single call:</p>
+    <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
+    <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+    <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
+    <span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">()</span>
+    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
+    <p>Other builder methods: <code>WithUserTargeting</code>, <code>WithAttributeRules</code>, <code>WithABTesting</code>, and <code>WithStrategy</code> for a custom <code>IToggleDecisionStrategy</code>. For non-default value sources, <code>WithProvider</code> (an <code>IToggleValueProvider</code>) and <code>WithBasePath</code> mirror the matching <code>StrategyToggleParser</code> constructors.</p>
   </section>
 
   <!-- PROVIDERS -->

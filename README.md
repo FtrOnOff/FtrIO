@@ -135,13 +135,14 @@ Providers push updates into `ToggleProviderBuffer`; the buffer flushes to `appse
 
 ## Strategy-based decisions
 
-`StrategyToggleParser` routes raw config values through a chain of `IToggleDecisionStrategy` implementations — percentage rollouts, blue-green slots, or custom logic:
+`StrategyToggleParser` routes raw config values through a chain of `IToggleDecisionStrategy` implementations — percentage rollouts, blue-green slots, per-user targeting, attribute rules, A/B tests, and more. The recommended way to wire it up is the fluent `ToggleParserBuilder`:
 
 ```csharp
-ToggleParserProvider.Configure(new StrategyToggleParser(
-    new PercentageRolloutStrategy(),
-    new BlueGreenStrategy()  // reads slot from FtrIO:BlueGreen in appsettings.json
-));
+ToggleParserProvider.ConfigureBuilder(builder => builder
+    .WithContextStrategies(contextAccessor)  // user targeting + attribute rules + A/B
+    .WithPercentageRollout()
+    .WithBlueGreen()
+    .WithOverrides(contextAccessor));
 ```
 
 ```json
@@ -151,7 +152,26 @@ ToggleParserProvider.Configure(new StrategyToggleParser(
 }
 ```
 
-> **[Full strategy docs →](https://docs.ftrio.dev/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, custom `IToggleDecisionStrategy`
+Strategies run in the order you add them, and `BooleanStrategy` is always appended automatically so existing `true`/`false` values keep working.
+
+<details>
+<summary>Prefer explicit construction? Build the parser by hand</summary>
+
+The builder is sugar over `StrategyToggleParser`'s constructors — you can always call them directly. This is the exact equivalent of the chain above:
+
+```csharp
+ToggleParserProvider.Configure(new StrategyToggleParser(
+    new OverrideResolver(contextAccessor, new ToggleParser()),
+    new UserTargetingStrategy(contextAccessor),
+    new AttributeRuleStrategy(contextAccessor),
+    new ABTestStrategy(contextAccessor),
+    new PercentageRolloutStrategy(),
+    new BlueGreenStrategy()
+));
+```
+</details>
+
+> **[Full strategy docs →](https://docs.ftrio.dev/#strategies)** — percentage rollout, blue-green, per-user targeting, attribute-based rules, A/B test assignment, per-user overrides, fluent builder, custom `IToggleDecisionStrategy`
 
 ---
 
@@ -172,6 +192,7 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 | Multi-environment — overlays, remote sources | [docs/#environments](https://docs.ftrio.dev/#environments) |
 | Dynamic providers — HTTP, Azure, env vars | [docs/#providers](https://docs.ftrio.dev/#providers) |
 | Strategy decisions — percentage, blue-green, user targeting, attribute rules, A/B testing, overrides | [docs/#strategies](https://docs.ftrio.dev/#strategies) |
+| Fluent configuration — `ToggleParserBuilder`, `ConfigureBuilder` | [docs/#strategies-builder](https://docs.ftrio.dev/#strategies-builder) |
 | Compile-time validation — `FTRIO001` | [docs/#analyzer](https://docs.ftrio.dev/#analyzer) |
 | Exceptions — `ToggleDoesNotExistException` etc. | [docs/#exceptions](https://docs.ftrio.dev/#exceptions) |
 | Custom parser / Dependency Injection | [docs/#di](https://docs.ftrio.dev/#di) |
