@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > entries are reconstructed from git tags and commit history, so they summarise rather than
 > exhaustively list every change.
 
-## [2.0.0] — Unreleased
+## [2.0.0] — 2026-06-26
 
 ### Breaking changes
 
