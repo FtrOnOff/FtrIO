@@ -142,7 +142,7 @@ ToggleParserProvider.ConfigureBuilder(builder => builder
     .WithContextStrategies(contextAccessor)  // user targeting + attribute rules + A/B
     .WithPercentageRollout()
     .WithBlueGreen()
-    .WithOverrides(contextAccessor));
+    .WithOverrides());  // reuses the accessor from WithContextStrategies
 ```
 
 ```json
@@ -157,11 +157,11 @@ Strategies run in the order you add them, and `BooleanStrategy` is always append
 <details>
 <summary>Prefer explicit construction? Build the parser by hand</summary>
 
-The builder is sugar over `StrategyToggleParser`'s constructors — you can always call them directly. This is the exact equivalent of the chain above:
+The builder is sugar over `StrategyToggleParser`'s constructors — you can always call them directly. Pass the `IFtrIOContextAccessor` as the first argument to enable per-user overrides. This is the exact equivalent of the chain above:
 
 ```csharp
 ToggleParserProvider.Configure(new StrategyToggleParser(
-    new OverrideResolver(contextAccessor, new ToggleParser()),
+    contextAccessor,  // enables per-user overrides (TogglesOverrides)
     new UserTargetingStrategy(contextAccessor),
     new AttributeRuleStrategy(contextAccessor),
     new ABTestStrategy(contextAccessor),
@@ -202,3 +202,4 @@ Each server needs only its own `appsettings.json` — prod, staging, and dev are
 | CI/CD — export-manifest-action | [github.com/FtrOnOff/export-manifest-action](https://github.com/FtrOnOff/export-manifest-action) |
 | CI/CD — release-check-action | [github.com/FtrOnOff/release-check-action](https://github.com/FtrOnOff/release-check-action) |
 | CI/CD — full pipeline docs | [docs/#cicd](https://docs.ftrio.dev/#cicd) |
+| Version history — breaking changes, migration | [CHANGELOG.md](CHANGELOG.md) |

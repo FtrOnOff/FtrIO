@@ -168,5 +168,86 @@ namespace FtrIOTests.Unit
 
             Assert.IsInstanceOf<StrategyToggleParser>(ToggleParserProvider.Instance);
         }
+
+        [Test]
+        public void TestWithOverridesNoArgumentReturnsBuilderInstanceWhenContextAccessorAlreadyRegistered()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var builder = new ToggleParserBuilder()
+                .WithContextStrategies(contextAccessor);
+            var returned = builder.WithOverrides();
+            Assert.AreSame(builder, returned);
+        }
+
+        [Test]
+        public void TestWithOverridesNoArgumentThrowsInvalidOperationExceptionWhenNoContextAccessorRegistered()
+        {
+            var builder = new ToggleParserBuilder();
+            Assert.Throws<InvalidOperationException>(() => builder.WithOverrides());
+        }
+
+        [Test]
+        public void TestWithOverridesExplicitAccessorReturnsBuilderInstanceWithoutContextStrategyRegistered()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var builder = new ToggleParserBuilder();
+            var returned = builder.WithOverrides(contextAccessor);
+            Assert.AreSame(builder, returned);
+        }
+
+        [Test]
+        public void TestBuildReturnsStrategyToggleParserWhenOverridesConfiguredViaNoArgumentOverload()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var result = new ToggleParserBuilder()
+                .WithContextStrategies(contextAccessor)
+                .WithOverrides()
+                .Build();
+            Assert.IsInstanceOf<StrategyToggleParser>(result);
+        }
+
+        [Test]
+        public void TestBuildReturnsStrategyToggleParserWhenOverridesConfiguredViaExplicitAccessorOverload()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var result = new ToggleParserBuilder()
+                .WithPercentageRollout()
+                .WithOverrides(contextAccessor)
+                .Build();
+            Assert.IsInstanceOf<StrategyToggleParser>(result);
+        }
+
+        [Test]
+        public void TestWithUserTargetingCapturesAccessorForSubsequentWithOverridesCall()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var result = new ToggleParserBuilder()
+                .WithUserTargeting(contextAccessor)
+                .WithOverrides()  // ← should not throw, accessor captured from WithUserTargeting
+                .Build();
+            Assert.IsInstanceOf<StrategyToggleParser>(result);
+        }
+
+        [Test]
+        public void TestWithABTestingCapturesAccessorForSubsequentWithOverridesCall()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var result = new ToggleParserBuilder()
+                .WithABTesting(contextAccessor)
+                .WithOverrides()  // ← should not throw, accessor captured from WithABTesting
+                .Build();
+            Assert.IsInstanceOf<StrategyToggleParser>(result);
+        }
+
+        [Test]
+        public void TestWithAttributeRulesCapturesAccessorForSubsequentWithOverridesCall()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble();
+            var result = new ToggleParserBuilder()
+                .WithAttributeRules(contextAccessor)
+                .WithOverrides()  // ← should not throw, accessor captured from WithAttributeRules
+                .Build();
+            Assert.IsInstanceOf<StrategyToggleParser>(result);
+        }
     }
 }

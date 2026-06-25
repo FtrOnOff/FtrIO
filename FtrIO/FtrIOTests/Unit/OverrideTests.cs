@@ -117,9 +117,7 @@ namespace FtrIOTests.Unit
         {
             // FakeTrue is "true" in config — override flips it to false for "user-override-off"
             var accessor = User("user-override-off");
-            var parser = new ToggleParser(TestHelpers.TestAppsettingsDir);
-            var overrides = new OverrideResolver(accessor, parser);
-            var stp = new StrategyToggleParser(overrides, TestHelpers.TestAppsettingsDir);
+            var stp = new StrategyToggleParser(accessor, TestHelpers.TestAppsettingsDir);
 
             Assert.IsFalse(stp.GetToggleStatus("FakeTrue"));
         }
@@ -129,9 +127,7 @@ namespace FtrIOTests.Unit
         {
             // FakeFalse is "false" in config — override flips it to true for "user-override-on"
             var accessor = User("user-override-on");
-            var parser = new ToggleParser(TestHelpers.TestAppsettingsDir);
-            var overrides = new OverrideResolver(accessor, parser);
-            var stp = new StrategyToggleParser(overrides, TestHelpers.TestAppsettingsDir);
+            var stp = new StrategyToggleParser(accessor, TestHelpers.TestAppsettingsDir);
 
             Assert.IsTrue(stp.GetToggleStatus("FakeFalse"));
         }
@@ -141,9 +137,7 @@ namespace FtrIOTests.Unit
         {
             // "other-user" has no override — normal config value applies
             var accessor = User("other-user");
-            var parser = new ToggleParser(TestHelpers.TestAppsettingsDir);
-            var overrides = new OverrideResolver(accessor, parser);
-            var stp = new StrategyToggleParser(overrides, TestHelpers.TestAppsettingsDir);
+            var stp = new StrategyToggleParser(accessor, TestHelpers.TestAppsettingsDir);
 
             Assert.IsTrue(stp.GetToggleStatus("FakeTrue"));
             Assert.IsFalse(stp.GetToggleStatus("FakeFalse"));
@@ -160,11 +154,10 @@ namespace FtrIOTests.Unit
         [Test]
         public void StrategyToggleParser_Override_WinsOverPercentageStrategy()
         {
-            // StrategyPercentageAlwaysOn is "100%" — but we can override it off for a specific user
+            // StrategyPercentageAlwaysOn is "100%" — but the TogglesOverrides entry in
+            // appsettings.json forces it off for "locked-out-user".
             var accessor = User("locked-out-user");
-            var fakeParser = new FakeParser(new() { [("StrategyPercentageAlwaysOn", "locked-out-user")] = false });
-            var overrides = new OverrideResolver(accessor, fakeParser);
-            var stp = new StrategyToggleParser(overrides, TestHelpers.TestAppsettingsDir,
+            var stp = new StrategyToggleParser(accessor, TestHelpers.TestAppsettingsDir,
                 new PercentageRolloutStrategy());
 
             Assert.IsFalse(stp.GetToggleStatus("StrategyPercentageAlwaysOn"));

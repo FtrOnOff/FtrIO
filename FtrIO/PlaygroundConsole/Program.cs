@@ -14,7 +14,7 @@ ToggleParserProvider.ConfigureBuilder(builder => builder
     .WithContextStrategies(accessor)
     .WithPercentageRollout()
     .WithBlueGreen()        // slot read from FtrIO:BlueGreen:CurrentSlot in appsettings.json
-    .WithOverrides(accessor));
+    .WithOverrides());      // accessor reused from WithContextStrategies — no need to repeat it
 
 // ── Startup banner ────────────────────────────────────────────────────────────
 var baseDir = AppContext.BaseDirectory;

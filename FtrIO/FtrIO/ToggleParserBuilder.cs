@@ -13,7 +13,8 @@ namespace FtrIO
     public class ToggleParserBuilder
     {
         private readonly List<IToggleDecisionStrategy> _strategies = new();
-        private OverrideResolver? _overrideResolver;
+        private IFtrIOContextAccessor? _contextAccessor;
+        private IFtrIOContextAccessor? _contextAccessorForOverrides;
         private string? _basePath;
         private IToggleValueProvider? _provider;
 
@@ -24,6 +25,7 @@ namespace FtrIO
         /// </summary>
         public ToggleParserBuilder WithUserTargeting(IFtrIOContextAccessor contextAccessor)
         {
+            _contextAccessor = contextAccessor;
             _strategies.Add(new UserTargetingStrategy(contextAccessor));
             return this;
         }
@@ -35,6 +37,7 @@ namespace FtrIO
         /// </summary>
         public ToggleParserBuilder WithAttributeRules(IFtrIOContextAccessor contextAccessor)
         {
+            _contextAccessor = contextAccessor;
             _strategies.Add(new AttributeRuleStrategy(contextAccessor));
             return this;
         }
@@ -47,6 +50,7 @@ namespace FtrIO
         /// </summary>
         public ToggleParserBuilder WithABTesting(IFtrIOContextAccessor contextAccessor)
         {
+            _contextAccessor = contextAccessor;
             _strategies.Add(new ABTestStrategy(contextAccessor));
             return this;
         }
@@ -59,6 +63,7 @@ namespace FtrIO
         /// </summary>
         public ToggleParserBuilder WithContextStrategies(IFtrIOContextAccessor contextAccessor)
         {
+            _contextAccessor = contextAccessor;
             _strategies.Add(new UserTargetingStrategy(contextAccessor));
             _strategies.Add(new AttributeRuleStrategy(contextAccessor));
             _strategies.Add(new ABTestStrategy(contextAccessor));
@@ -87,13 +92,33 @@ namespace FtrIO
         }
 
         /// <summary>
-        /// Configures per-user overrides via TogglesOverrides in appsettings.json.
+        /// Enables per-user overrides (TogglesOverrides in appsettings.json) using the
+        /// IFtrIOContextAccessor already supplied to WithContextStrategies, WithUserTargeting,
+        /// WithABTesting, or WithAttributeRules. Call one of those before this overload so the
+        /// accessor doesn't have to be repeated. Overrides are checked before any strategy.
+        /// Throws InvalidOperationException if no context accessor has been registered.
+        /// </summary>
+        public ToggleParserBuilder WithOverrides()
+        {
+            if (_contextAccessor is null)
+                throw new InvalidOperationException(
+                    "WithOverrides() requires an IFtrIOContextAccessor. " +
+                    "Call WithContextStrategies, WithUserTargeting, WithABTesting, or " +
+                    "WithAttributeRules before calling WithOverrides(), or use " +
+                    "WithOverrides(contextAccessor) to supply one explicitly.");
+            _contextAccessorForOverrides = _contextAccessor;
+            return this;
+        }
+
+        /// <summary>
+        /// Enables per-user overrides using an explicitly supplied IFtrIOContextAccessor.
+        /// Use this when WithOverrides() is called without any context-aware strategies,
+        /// or when a different accessor is needed for overrides than for strategies.
         /// Overrides are checked before any strategy in the chain.
-        /// Requires an IFtrIOContextAccessor that supplies the current user ID.
         /// </summary>
         public ToggleParserBuilder WithOverrides(IFtrIOContextAccessor contextAccessor)
         {
-            _overrideResolver = new OverrideResolver(contextAccessor, new ToggleParser());
+            _contextAccessorForOverrides = contextAccessor;
             return this;
         }
 
@@ -141,17 +166,17 @@ namespace FtrIO
             var strategies = _strategies.ToArray();
 
             if (_provider != null)
-                return _overrideResolver != null
-                    ? new StrategyToggleParser(_overrideResolver, _provider, strategies)
+                return _contextAccessorForOverrides != null
+                    ? new StrategyToggleParser(_contextAccessorForOverrides, _provider, strategies)
                     : new StrategyToggleParser(_provider, strategies);
 
             if (_basePath != null)
-                return _overrideResolver != null
-                    ? new StrategyToggleParser(_overrideResolver, _basePath, strategies)
+                return _contextAccessorForOverrides != null
+                    ? new StrategyToggleParser(_contextAccessorForOverrides, _basePath, strategies)
                     : new StrategyToggleParser(_basePath, strategies);
 
-            return _overrideResolver != null
-                ? new StrategyToggleParser(_overrideResolver, strategies)
+            return _contextAccessorForOverrides != null
+                ? new StrategyToggleParser(_contextAccessorForOverrides, strategies)
                 : new StrategyToggleParser(strategies);
         }
     }

@@ -34,19 +34,26 @@ namespace FtrIO.Classes
         private readonly IConfigurationSection? _overridesSection;
 
         public StrategyToggleParser(params IToggleDecisionStrategy[] strategies)
-            : this(overrides: null, basePath: null, strategies) { }
+            : this(contextAccessor: null, basePath: null, strategies) { }
 
-        public StrategyToggleParser(OverrideResolver? overrides, params IToggleDecisionStrategy[] strategies)
-            : this(overrides, basePath: null, strategies) { }
+        public StrategyToggleParser(IFtrIOContextAccessor? contextAccessor, params IToggleDecisionStrategy[] strategies)
+            : this(contextAccessor, basePath: null, strategies) { }
 
         public StrategyToggleParser(string? basePath, params IToggleDecisionStrategy[] strategies)
-            : this(overrides: null, basePath, strategies) { }
+            : this(contextAccessor: null, basePath, strategies) { }
 
-        public StrategyToggleParser(OverrideResolver? overrides, string? basePath, params IToggleDecisionStrategy[] strategies)
+        public StrategyToggleParser(IFtrIOContextAccessor? contextAccessor, string? basePath, params IToggleDecisionStrategy[] strategies)
         {
-            _overrides = overrides;
             _strategies = BuildStrategyChain(strategies);
             basePath ??= AppContext.BaseDirectory;
+
+            // Overrides are an internal concern: when a context accessor is supplied we
+            // build the OverrideResolver here, pointed at the same appsettings.json the
+            // strategy chain reads from. Callers never construct OverrideResolver themselves.
+            _overrides = contextAccessor != null
+                ? new OverrideResolver(contextAccessor, new ToggleParser(basePath))
+                : null;
+
             _configFileExists = File.Exists(Path.Combine(basePath, "appsettings.json"));
 
             if (_configFileExists)
@@ -80,13 +87,19 @@ namespace FtrIO.Classes
         }
 
         public StrategyToggleParser(IToggleValueProvider provider, params IToggleDecisionStrategy[] strategies)
-            : this(overrides: null, provider, strategies) { }
+            : this(contextAccessor: null, provider, strategies) { }
 
-        public StrategyToggleParser(OverrideResolver? overrides, IToggleValueProvider provider, params IToggleDecisionStrategy[] strategies)
+        public StrategyToggleParser(IFtrIOContextAccessor? contextAccessor, IToggleValueProvider provider, params IToggleDecisionStrategy[] strategies)
         {
-            _overrides = overrides;
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _strategies = BuildStrategyChain(strategies);
+
+            // No explicit basePath for the provider variant — resolve overrides against
+            // the default appsettings.json location.
+            _overrides = contextAccessor != null
+                ? new OverrideResolver(contextAccessor, new ToggleParser())
+                : null;
+
             _configFileExists = true;
         }
 

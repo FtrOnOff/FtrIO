@@ -281,6 +281,7 @@
     <a href="#exceptions">Exceptions</a>
     <a href="#ecosystem">Ecosystem</a>
     <a href="#cicd">CI/CD</a>
+    <a href="https://github.com/FtrOnOff/FtrIO/blob/main/CHANGELOG.md">Changelog</a>
     <a href="https://github.com/FtrOnOff/FtrIO">GitHub</a>
     <a href="https://www.nuget.org/packages/FtrIO">NuGet</a>
   </div>
@@ -786,10 +787,10 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
     <span class="st">"bob"</span><span class="pu">:</span>   <span class="kw">false</span>    <span class="cm">// always OFF for bob regardless of ab:50</span>
   <span class="pu">}</span>
 <span class="pu">}</span></code></pre>
-    <p>Add overrides to your pipeline with <code>WithOverrides</code> — they are checked before any strategy in the chain:</p>
+    <p>Add overrides to your pipeline with <code>WithOverrides()</code> — they are checked before any strategy in the chain. The no-argument overload reuses the <code>IFtrIOContextAccessor</code> already supplied to <code>WithContextStrategies</code> (or any context-aware strategy):</p>
     <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
     <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
-    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
+    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">());</span></code></pre>
 
     <h3 id="strategies-builder">Fluent configuration</h3>
     <p><code>ToggleParserBuilder</code> turns the nested <code>StrategyToggleParser</code> constructor into a readable chain of named methods. Strategies are added in call order — so the chain reads exactly as the pipeline runs — and <code>BooleanStrategy</code> is still appended automatically. <code>WithContextStrategies</code> adds <code>UserTargetingStrategy</code>, <code>AttributeRuleStrategy</code>, and <code>ABTestStrategy</code> in one call when they share the same <code>IFtrIOContextAccessor</code>.</p>
@@ -798,15 +799,15 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
         <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>  <span class="cm">// user targeting + attribute rules + A/B</span>
         <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
         <span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">()</span>
-        <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
+        <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">()</span>
         <span class="pu">.</span><span class="nm">Build</span><span class="pu">());</span></code></pre>
     <p><code>ConfigureBuilder</code> is a convenience overload that builds the parser and registers it in a single call:</p>
     <pre><code><span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
     <span class="pu">.</span><span class="nm">WithContextStrategies</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">)</span>
     <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
     <span class="pu">.</span><span class="nm">WithBlueGreen</span><span class="pu">()</span>
-    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">(</span><span class="nm">contextAccessor</span><span class="pu">));</span></code></pre>
-    <p>Other builder methods: <code>WithUserTargeting</code>, <code>WithAttributeRules</code>, <code>WithABTesting</code>, and <code>WithStrategy</code> for a custom <code>IToggleDecisionStrategy</code>. For non-default value sources, <code>WithProvider</code> (an <code>IToggleValueProvider</code>) and <code>WithBasePath</code> mirror the matching <code>StrategyToggleParser</code> constructors.</p>
+    <span class="pu">.</span><span class="nm">WithOverrides</span><span class="pu">());</span></code></pre>
+    <p>Other builder methods: <code>WithUserTargeting</code>, <code>WithAttributeRules</code>, <code>WithABTesting</code>, and <code>WithStrategy</code> for a custom <code>IToggleDecisionStrategy</code>. If you enable overrides without any context-aware strategy, pass the accessor explicitly with <code>WithOverrides(contextAccessor)</code>. For non-default value sources, <code>WithProvider</code> (an <code>IToggleValueProvider</code>) and <code>WithBasePath</code> mirror the matching <code>StrategyToggleParser</code> constructors.</p>
   </section>
 
   <!-- PROVIDERS -->
