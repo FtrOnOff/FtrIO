@@ -10,6 +10,9 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+        <!-- Pin transitive Microsoft.NETCore.Platforms (via NETStandard.Library) to an MIT-licensed
+             version; 1.1.0 ships under the non-OSS MICROSOFT .NET LIBRARY license, 2.0.0+ is MIT. -->
+        <PackageReference Include="Microsoft.NETCore.Platforms" Version="5.0.0" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
