@@ -12,7 +12,6 @@
       <ProjectReference Include="..\FtrIO.Analyzers\FtrIO.Analyzers.csproj"
                         ReferenceOutputAssembly="false"
                         OutputItemType="Analyzer" />
-      <PackageReference Include="AspectInjector" Version="2.9.0" />
     </ItemGroup>
 
     <ItemGroup>

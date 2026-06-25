@@ -90,11 +90,7 @@ public void SendWelcomeEmail() { ... }
 SendWelcomeEmail(); // runs only if "SendWelcomeEmail": true
 ```
 
-Any project that decorates its own methods needs an [AspectInjector](https://github.com/pamidur/aspect-injector) reference — weaving is per-compilation:
-
-```xml
-<PackageReference Include="AspectInjector" Version="2.9.0" />
-```
+Weaving happens per-compilation, but you don't need to wire anything up: FtrIO depends on [AspectInjector](https://github.com/pamidur/aspect-injector) and flows its weaver to your project automatically through the NuGet package, so `[Toggle]` on your own methods is woven without any extra reference.
 
 ---
 

@@ -11,11 +11,11 @@
     /// compile time, so the method is gated even when called directly -
     /// no call through FeatureToggle.ExecuteMethodIfToggleOn is required.
     ///
-    /// IMPORTANT: any project that wants its OWN [Toggle]-decorated methods
-    /// to be woven (not just FtrIO itself) must add its own PackageReference
-    /// to AspectInjector. Weaving happens per-compilation, so a console app
-    /// or other consumer referencing FtrIO.dll does not get this "for free"
-    /// just by referencing the library - see README for details.
+    /// Weaving happens per-compilation, but consumers don't need to reference
+    /// AspectInjector themselves: FtrIO depends on it and flows its weaver
+    /// targets transitively (via AspectInjector's buildTransitive assets), so
+    /// a consumer's own [Toggle]-decorated methods are woven just by
+    /// referencing the FtrIO package.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     [Aspect(Scope.Global)]
