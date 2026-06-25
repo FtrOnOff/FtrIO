@@ -495,11 +495,7 @@
     <h3>1. Install the package</h3>
     <pre><code>dotnet add package FtrIO</code></pre>
 
-    <h3>2. Add AspectInjector to your consuming project</h3>
-    <p>AspectInjector weaves <code>[Toggle]</code> IL at compile time, per project. Any project that decorates its own methods needs this:</p>
-    <pre><code><span class="xml-tag">&lt;PackageReference</span> <span class="xml-attr">Include</span>=<span class="xml-val">"AspectInjector"</span> <span class="xml-attr">Version</span>=<span class="xml-val">"2.9.0"</span> <span class="xml-tag">/&gt;</span></code></pre>
-
-    <h3>3. Create <code>appsettings.json</code></h3>
+    <h3>2. Create <code>appsettings.json</code></h3>
     <pre><code>{
   <span class="st">"Toggles"</span>: {
     <span class="st">"SendWelcomeEmail"</span>: <span class="kw">true</span>,
@@ -507,14 +503,14 @@
   }
 }</code></pre>
 
-    <h3>4. Copy it to the build output</h3>
+    <h3>3. Copy it to the build output</h3>
     <pre><code><span class="xml-tag">&lt;ItemGroup&gt;</span>
   <span class="xml-tag">&lt;None</span> <span class="xml-attr">Update</span>=<span class="xml-val">"appsettings.json"</span><span class="xml-tag">&gt;</span>
     <span class="xml-tag">&lt;CopyToOutputDirectory&gt;</span>Always<span class="xml-tag">&lt;/CopyToOutputDirectory&gt;</span>
   <span class="xml-tag">&lt;/None&gt;</span>
 <span class="xml-tag">&lt;/ItemGroup&gt;</span></code></pre>
 
-    <h3>5. Decorate and call</h3>
+    <h3>4. Decorate and call</h3>
     <pre><code><span class="kw">using</span> <span class="nm">FtrIO</span><span class="pu">;</span>
 
 <span class="kw">public class</span> <span class="ty">EmailService</span>

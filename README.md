@@ -90,8 +90,6 @@ public void SendWelcomeEmail() { ... }
 SendWelcomeEmail(); // runs only if "SendWelcomeEmail": true
 ```
 
-Weaving happens per-compilation, but you don't need to wire anything up: FtrIO depends on [AspectInjector](https://github.com/pamidur/aspect-injector) and flows its weaver to your project automatically through the NuGet package, so `[Toggle]` on your own methods is woven without any extra reference.
-
 ---
 
 ## Dynamic providers
