@@ -21,9 +21,9 @@ namespace FtrIO.Providers.Http
     /// Usage:
     ///   var buffer = new ToggleProviderBuffer();
     ///   new HttpToggleParser("https://flags.example.com/toggles", buffer);
-    ///   ToggleParserProvider.Configure(new StrategyToggleParser(
-    ///       new PercentageRolloutStrategy(),
-    ///       new BlueGreenStrategy("blue", "blue", "green")));
+    ///   ToggleParserProvider.ConfigureBuilder(b => b
+    ///       .WithPercentageRollout()
+    ///       .WithStrategy(new BlueGreenStrategy("blue", "blue", "green")));
     /// </summary>
     public class HttpToggleParser : IDisposable
     {

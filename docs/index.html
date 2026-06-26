@@ -932,7 +932,7 @@ dev-machine/appsettings.json    <span class="cm">← dev toggle state</span></co
 <span class="kw">new</span> <span class="ty">HttpToggleParser</span><span class="pu">(</span><span class="st">"https://flags.example.com/toggles"</span><span class="pu">,</span> <span class="nm">buffer</span><span class="pu">,</span>
     <span class="nm">pollInterval</span><span class="pu">:</span> <span class="ty">TimeSpan</span><span class="pu">.</span><span class="nm">FromSeconds</span><span class="pu">(</span><span class="nm">30</span><span class="pu">));</span>
 
-<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">PercentageRolloutStrategy</span><span class="pu">()));</span></code></pre>
+<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span><span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">());</span></code></pre>
 
     <h3>Azure App Config provider</h3>
     <pre><code>dotnet add package FtrIO.Providers.AzureAppConfig</code></pre>
@@ -968,10 +968,9 @@ FTRIO__Toggles__NewCheckout=50%</code></pre>
 <span class="kw">new</span> <span class="ty">EnvironmentVariableToggleParser</span><span class="pu">(</span><span class="nm">buffer</span><span class="pu">);</span>
 
 <span class="cm">// 3. Configure the reader — always reads from appsettings.json</span>
-<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">Configure</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">StrategyToggleParser</span><span class="pu">(</span>
-    <span class="kw">new</span> <span class="ty">PercentageRolloutStrategy</span><span class="pu">(),</span>
-    <span class="kw">new</span> <span class="ty">BlueGreenStrategy</span><span class="pu">(</span><span class="st">"blue"</span><span class="pu">,</span> <span class="st">"blue"</span><span class="pu">,</span> <span class="st">"green"</span><span class="pu">)</span>
-<span class="pu">));</span>
+<span class="ty">ToggleParserProvider</span><span class="pu">.</span><span class="nm">ConfigureBuilder</span><span class="pu">(</span><span class="nm">builder</span> <span class="pu">=&gt;</span> <span class="nm">builder</span>
+    <span class="pu">.</span><span class="nm">WithPercentageRollout</span><span class="pu">()</span>
+    <span class="pu">.</span><span class="nm">WithStrategy</span><span class="pu">(</span><span class="kw">new</span> <span class="ty">BlueGreenStrategy</span><span class="pu">(</span><span class="st">"blue"</span><span class="pu">,</span> <span class="st">"blue"</span><span class="pu">,</span> <span class="st">"green"</span><span class="pu">)));</span>
 
 <span class="cm">// 4. Call sites are completely unchanged</span>
 <span class="nm">emailService</span><span class="pu">.</span><span class="nm">SendWelcomeEmail</span><span class="pu">();</span>

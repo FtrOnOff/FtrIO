@@ -249,5 +249,45 @@ namespace FtrIOTests.Unit
                 .Build();
             Assert.IsInstanceOf<StrategyToggleParser>(result);
         }
+
+        // ── Builder path — behavioural override coverage ──────────────────────────
+        // The tests above only check Build() returns a parser; these verify the parser
+        // the builder produces actually applies per-user overrides at runtime.
+
+        [Test]
+        public void TestBuiltParserAppliesOverrideWhenOverridesConfiguredViaExplicitAccessor()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble("user-override-off");
+            var parser = new ToggleParserBuilder()
+                .WithBasePath(TestHelpers.TestAppsettingsDir)
+                .WithOverrides(contextAccessor)
+                .Build();
+            // FakeTrue is "true" in config, but overridden off for "user-override-off".
+            Assert.IsFalse(parser.GetToggleStatus("FakeTrue"));
+        }
+
+        [Test]
+        public void TestBuiltParserAppliesOverrideWhenOverridesConfiguredViaNoArgumentOverload()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble("user-override-off");
+            var parser = new ToggleParserBuilder()
+                .WithBasePath(TestHelpers.TestAppsettingsDir)
+                .WithUserTargeting(contextAccessor)  // captures the accessor
+                .WithOverrides()                      // reuses it — no accessor repeated
+                .Build();
+            Assert.IsFalse(parser.GetToggleStatus("FakeTrue"));
+        }
+
+        [Test]
+        public void TestBuiltParserLeavesValueUnchangedForUserWithoutOverride()
+        {
+            var contextAccessor = new FtrIOContextAccessorTestDouble("other-user");
+            var parser = new ToggleParserBuilder()
+                .WithBasePath(TestHelpers.TestAppsettingsDir)
+                .WithOverrides(contextAccessor)
+                .Build();
+            // "other-user" has no override, so FakeTrue keeps its configured value (true).
+            Assert.IsTrue(parser.GetToggleStatus("FakeTrue"));
+        }
     }
 }

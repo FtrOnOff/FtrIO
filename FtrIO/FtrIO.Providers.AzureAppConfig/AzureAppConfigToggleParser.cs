@@ -22,7 +22,7 @@ namespace FtrIO.Providers.AzureAppConfig
     /// Usage (connection string):
     ///   var buffer = new ToggleProviderBuffer();
     ///   new AzureAppConfigToggleParser("Endpoint=https://...;Id=...;Secret=...", buffer);
-    ///   ToggleParserProvider.Configure(new StrategyToggleParser(new PercentageRolloutStrategy()));
+    ///   ToggleParserProvider.ConfigureBuilder(b => b.WithPercentageRollout());
     ///
     /// Usage (Managed Identity / DefaultAzureCredential):
     ///   new AzureAppConfigToggleParser(new Uri("https://myconfig.azconfig.io"),

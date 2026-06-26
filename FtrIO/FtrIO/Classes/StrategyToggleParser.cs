@@ -15,7 +15,10 @@ namespace FtrIO.Classes
     ///   1. appsettings.json (default) — same two-pass reload behaviour as ToggleParser.
     ///   2. IToggleValueProvider — any external source (env vars, HTTP, Azure App Config).
     ///
-    /// Usage:
+    /// Usage (preferred — fluent builder):
+    ///   ToggleParserProvider.ConfigureBuilder(b => b.WithPercentageRollout().WithBlueGreen());
+    ///
+    /// Or construct directly:
     ///   // appsettings.json with strategies
     ///   new StrategyToggleParser(new PercentageRolloutStrategy(), new BlueGreenStrategy(...))
     ///
