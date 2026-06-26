@@ -47,9 +47,11 @@
     }
     .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text); }
     .nav-logo img { height: 28px; }
-    .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; color: var(--muted); align-items: center; }
     .nav-links a { color: var(--muted); }
     .nav-links a:hover { color: var(--text); }
+    .nav-links a.lang-switch { color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: 0.15rem 0.7rem; }
+    .nav-links a.lang-switch:hover { background: var(--accent-dim); text-decoration: none; }
 
     /* HERO */
     .hero {
@@ -284,7 +286,7 @@
     <a href="https://github.com/FtrOnOff/FtrIO/blob/main/CHANGELOG.md">Changelog</a>
     <a href="https://github.com/FtrOnOff/FtrIO">GitHub</a>
     <a href="https://www.nuget.org/packages/FtrIO">NuGet</a>
-    <a href="https://python.ftrio.dev">Python ↗</a>
+    <a class="lang-switch" href="https://python.ftrio.dev">Python ↗</a>
   </div>
 </nav>
 
