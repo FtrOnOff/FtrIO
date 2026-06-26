@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > entries are reconstructed from git tags and commit history, so they summarise rather than
 > exhaustively list every change.
 
+## [2.0.1] — 2026-06-26
+
+### Documentation
+
+- Usage examples now lead with the fluent `ToggleParserBuilder` as the preferred way to
+  configure a parser — across the in-IDE XML docs (`StrategyToggleParser`, `HttpToggleParser`,
+  `AzureAppConfigToggleParser`) and the documentation site. The direct constructor is retained
+  as an explicit alternative.
+
 ## [2.0.0] — 2026-06-26
 
 ### Breaking changes
@@ -180,7 +189,8 @@ First published NuGet release.
   `ToggleAttributeMissingException`) consolidated into the main project so FtrIO ships as a
   single NuGet package.
 
-[2.0.0]: https://github.com/FtrOnOff/FtrIO/compare/v1.1.2...HEAD
+[2.0.1]: https://github.com/FtrOnOff/FtrIO/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/FtrOnOff/FtrIO/compare/v1.1.2...v2.0.0
 [1.1.2]: https://github.com/FtrOnOff/FtrIO/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/TheScottBot/FtrIO/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/TheScottBot/FtrIO/compare/v1.0.4...v1.1.0

@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>FtrIO.Providers.AzureAppConfig</PackageId>
-        <Version>1.0.0</Version>
+        <Version>2.0.1</Version>
         <Authors>TheScottBot</Authors>
         <Description>Azure App Configuration provider for FtrIO. Reads toggle state from Azure App Config with TTL-based caching and fail-safe fallback.</Description>
         <PackageTags>feature-toggle;feature-flag;toggle;dotnet;azure;app-configuration</PackageTags>
